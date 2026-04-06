@@ -7,6 +7,10 @@ public class DetectionObject : MonoBehaviour
     [SerializeField] private bool _isFake = false;
     [SerializeField] private DetectionData _data;
 
+    [SerializeField] private AnswerButtonType _correctButton;
+
+    public AnswerButtonType CorrectButton => _correctButton;
+
     private Coroutine _detectionCoroutine;
 
     private bool _isInZone = false;
@@ -21,6 +25,7 @@ public class DetectionObject : MonoBehaviour
         _rend = GetComponent<Renderer>();
         _originColor = _rend.material.color;
     }
+
 
     public void EnterZone()
     {
