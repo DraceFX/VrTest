@@ -4,7 +4,6 @@ using UnityEngine;
 public class ButtonDetectionPressed : MonoBehaviour
 {
     [SerializeField] private List<AnswerButton> _allButtons;
-    [SerializeField] private DetectionData _data;
     [SerializeField] private UiManager _uiManager;
 
     private DetectionObject _cachedObject;
@@ -13,7 +12,9 @@ public class ButtonDetectionPressed : MonoBehaviour
 
     private void OnEnable()
     {
-        SetupButtons();
+        DetectionState.OnChanged += SetupButtons;
+
+        SetupButtons(DetectionState.CurrentObject);
     }
 
     private void OnDisable()
@@ -26,9 +27,8 @@ public class ButtonDetectionPressed : MonoBehaviour
         RemoveListener();
     }
 
-    private void SetupButtons()
+    private void SetupButtons(DetectionObject obj)
     {
-        var obj = _data.currentObject;
         _cachedObject = obj;
 
         RemoveListener();
@@ -109,6 +109,7 @@ public class ButtonDetectionPressed : MonoBehaviour
 
     private void RemoveListener()
     {
+        DetectionState.OnChanged -= SetupButtons;
         foreach (var b in _allButtons)
         {
             b.Button.onClick.RemoveAllListeners();

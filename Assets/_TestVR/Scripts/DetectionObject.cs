@@ -5,7 +5,6 @@ public class DetectionObject : MonoBehaviour
 {
     [SerializeField] private float _detectionTime = 5f;
     [SerializeField] private bool _isFake = false;
-    [SerializeField] private DetectionData _data;
 
     [SerializeField] private AnswerButtonType _correctButton;
 
@@ -70,7 +69,7 @@ public class DetectionObject : MonoBehaviour
         _isDetected = true;
         _rend.material.color = _detectedColor;
 
-        _data.currentObject = this;
+        DetectionState.Set(this);
     }
 
     private void ResetDetection()
@@ -78,10 +77,7 @@ public class DetectionObject : MonoBehaviour
         _isDetected = false;
         _rend.material.color = _originColor;
 
-        if (_data.currentObject == this)
-        {
-            _data.currentObject = null;
-        }
+        DetectionState.Clear(this);
     }
 
     public bool IsDetected()
