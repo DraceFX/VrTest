@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class DetectionObject : MonoBehaviour
+public class DetectionObject : MonoBehaviour, IDetection
 {
     [SerializeField] private float _detectionTime = 5f;
     [SerializeField] private bool _isFake = false;
@@ -64,7 +64,7 @@ public class DetectionObject : MonoBehaviour
         CompleteDetection();
     }
 
-    private void CompleteDetection()
+    public void CompleteDetection()
     {
         _isDetected = true;
         _rend.material.color = _detectedColor;
@@ -72,7 +72,7 @@ public class DetectionObject : MonoBehaviour
         DetectionState.Set(this);
     }
 
-    private void ResetDetection()
+    public void ResetDetection()
     {
         _isDetected = false;
         _rend.material.color = _originColor;

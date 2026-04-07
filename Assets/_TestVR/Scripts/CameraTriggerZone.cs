@@ -4,9 +4,7 @@ public class CameraTriggerZone : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        DetectionObject obj = other.GetComponent<DetectionObject>();
-
-        if (obj != null)
+        if (other.TryGetComponent<IDetection>(out IDetection obj))
         {
             obj.EnterZone();
         }
@@ -14,9 +12,7 @@ public class CameraTriggerZone : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        DetectionObject obj = other.GetComponent<DetectionObject>();
-
-        if (obj != null)
+        if (other.TryGetComponent<IDetection>(out IDetection obj))
         {
             obj.ExitZone();
         }
