@@ -22,30 +22,14 @@ public class ObjectTriggerManager : MonoBehaviour
             if (!string.IsNullOrEmpty(entry.Id))
             {
                 string newId = RegisterId(entry.Id);
-                if (entry.Object is ITriggerEnter objInterface)
-                {
-                    objInterface.Id = newId;
-                }
-
-                if (entry.Trigger is IObjectEnter triggerInterface)
-                {
-                    triggerInterface.Id = newId;
-                }
+                SetId(entry, newId);
             }
             else
             {
                 string newId = GenerateUniqueId();
                 entry.Id = newId;
 
-                if (entry.Object is ITriggerEnter objInterface)
-                {
-                    objInterface.Id = newId;
-                }
-
-                if (entry.Trigger is IObjectEnter triggerInterface)
-                {
-                    triggerInterface.Id = newId;
-                }
+                SetId(entry, newId);
             }
         }
     }
@@ -70,6 +54,19 @@ public class ObjectTriggerManager : MonoBehaviour
         }
         return id;
     }
+
+    private void SetId(ObjectTrigger obj, string id)
+    {
+        if (obj.Object is ITriggerEnter objInterface)
+        {
+            objInterface.Id = id;
+        }
+
+        if (obj.Trigger is IObjectEnter triggerInterface)
+        {
+            triggerInterface.Id = id;
+        }
+    }
 }
 
 [Serializable]
@@ -78,4 +75,13 @@ public class ObjectTrigger
     public InteractableObject Object;
     public InteractableTrigger Trigger;
     public string Id;
+}
+
+[Flags]
+public enum UseCondition
+{
+    None = 0,
+    ReleaseGrab = 1 << 0,
+    TriggerPress = 1 << 1,
+    AutoSnap = 1 << 2
 }
