@@ -13,6 +13,7 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
     [SerializeField] private UseCondition _conditions;
     [SerializeField] private float _snapSpeed = 5f;
     [SerializeField] private float _autoSnapDistance = 0.2f;
+    [SerializeField] private Transform _snapTransform;
 
 
     [Header("Hologram")]
@@ -23,6 +24,8 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
 
     private bool _isSnapping;
     private bool _wasTriggerPressed;
+
+    private Transform SnapTarget => _snapTransform != null ? _snapTransform : transform;
 
     public string TAG { get => _tag; set => _tag = value; }
     public string Id { get => _id; set => _id = value; }
@@ -103,7 +106,7 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
         // AutoSnap
         if (_conditions.HasFlag(UseCondition.AutoSnap))
         {
-            float dist = Vector3.Distance(_currentObject.transform.position, transform.position);
+            float dist = Vector3.Distance(_currentObject.transform.position, SnapTarget.position);
 
             if (dist < _autoSnapDistance)
                 return true;
@@ -118,7 +121,7 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
 
         if (_hologramInstance != null) return;
 
-        _hologramInstance = Instantiate(source, transform.position, transform.rotation);
+        _hologramInstance = Instantiate(source, SnapTarget.position, SnapTarget.rotation);
 
         var grab = _hologramInstance.GetComponent<XRGrabInteractable>();
         if (grab != null)
@@ -190,13 +193,13 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
         {
             t += Time.deltaTime * _snapSpeed;
 
-            obj.position = Vector3.Lerp(startPos, transform.position, t);
-            obj.rotation = Quaternion.Lerp(startRot, transform.rotation, t);
+            obj.position = Vector3.Lerp(startPos, SnapTarget.position, t);
+            obj.rotation = Quaternion.Lerp(startRot, SnapTarget.rotation, t);
 
             yield return null;
         }
 
-        obj.SetParent(transform);
+        obj.SetParent(SnapTarget);
         obj.localPosition = Vector3.zero;
         obj.localRotation = Quaternion.identity;
 
