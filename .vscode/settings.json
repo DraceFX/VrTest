@@ -67,5 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "VrTest.slnx"
+    "dotnet.defaultSolution": "VrTest.slnx",
+    "dotnet.enableWorkspaceBasedDevelopment": false
 }

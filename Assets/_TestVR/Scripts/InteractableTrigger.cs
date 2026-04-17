@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
@@ -23,7 +24,6 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
     private GameObject _hologramInstance;
 
     private bool _isSnapping;
-    private bool _wasTriggerPressed;
 
     private Transform SnapTarget => _snapTransform != null ? _snapTransform : transform;
 
@@ -40,7 +40,8 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
         if (obj == null || obj.Id != _id) return;
 
         _currentObject = obj;
-        CreateHologram(obj.gameObject);
+CreateHologram(obj.gameObject);
+Subscribe(obj);
     }
 
     private void OnTriggerExit(Collider other)
@@ -49,71 +50,120 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
 
         if (other.gameObject == _currentObject.gameObject)
         {
-            ClearHologram();
-            _currentObject = null;
+           Unsubscribe(_currentObject);
+ClearHologram();
+_currentObject = null;
         }
     }
 
-    private void Update()
+    private void Subscribe(InteractableObject obj)
+{
+    if (obj.Grab != null)
     {
-        if (_currentObject == null || _isSnapping) return;
-
-        if (CheckConditions())
-        {
-            _isSnapping = true;
-            ClearHologram();
-            StartCoroutine(SnapAndLock());
-        }
+        obj.Grab.selectExited.AddListener(OnReleased);
+obj.Grab.activated.AddListener(OnActivated);
     }
+}
 
-    private bool CheckConditions()
+private void Unsubscribe(InteractableObject obj)
+{
+    if (obj != null && obj.Grab != null)
     {
-        var grab = _currentObject.Grab;
-
-        // Release Grab
-        if (_conditions.HasFlag(UseCondition.ReleaseGrab))
-        {
-            if (grab != null && !grab.isSelected)
-                return true;
-        }
-
-        // Trigger Press
-        if (_conditions.HasFlag(UseCondition.TriggerPress))
-        {
-            if (grab != null && grab.isSelected)
-            {
-                var interactor = grab.firstInteractorSelecting;
-
-                if (interactor is XRDirectInteractor direct)
-                {
-                    bool isPressed = direct.xrController.activateInteractionState.active;
-
-                    if (isPressed && !_wasTriggerPressed)
-                    {
-                        _wasTriggerPressed = true;
-                        return true;
-                    }
-
-                    _wasTriggerPressed = isPressed;
-                }
-            }
-            else
-            {
-                _wasTriggerPressed = false;
-            }
-        }
-
-        // AutoSnap
-        if (_conditions.HasFlag(UseCondition.AutoSnap))
-        {
-            float dist = Vector3.Distance(_currentObject.transform.position, SnapTarget.position);
-
-            if (dist < _autoSnapDistance)
-                return true;
-        }
-
-        return false;
+        obj.Grab.selectExited.RemoveListener(OnReleased);
+obj.Grab.activated.RemoveListener(OnActivated);
     }
+}
+
+private void OnReleased(SelectExitEventArgs args)
+{
+    if (!_conditions.HasFlag(UseCondition.ReleaseGrab)) return;
+    if (_currentObject == null || _isSnapping) return;
+
+    StartSnap();
+}
+
+private void OnActivated(ActivateEventArgs args)
+{
+    if (!_conditions.HasFlag(UseCondition.TriggerPress)) return;
+    if (_currentObject == null || _isSnapping) return;
+
+    StartSnap();
+}
+
+private void StartSnap()
+{
+    if (_isSnapping) return;
+
+    _isSnapping = true;
+    ClearHologram();
+    StartCoroutine(SnapAndLock());
+}
+
+    // private bool CheckConditions()
+    // {
+    //     var grab = _currentObject.Grab;
+
+    //     // Release Grab
+    //     if (_conditions.HasFlag(UseCondition.ReleaseGrab))
+    //     {
+    //         if (grab != null && !grab.isSelected)
+    //             return true;
+    //     }
+
+    //     // Trigger Press
+    //     if (_conditions.HasFlag(UseCondition.TriggerPress))
+    //     {
+    //         if (grab != null && grab.isSelected)
+    //         {
+    //             var interactor = grab.firstInteractorSelecting;
+
+    //             if (interactor is XRDirectInteractor direct)
+    //             {
+    //                 bool isPressed = direct.xrController.activateInteractionState.active;
+
+    //                 if (isPressed && !_wasTriggerPressed)
+    //                 {
+    //                     _wasTriggerPressed = true;
+    //                     return true;
+    //                 }
+
+    //                 _wasTriggerPressed = isPressed;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             _wasTriggerPressed = false;
+    //         }
+    //     }
+
+    //     // AutoSnap
+    //     if (_conditions.HasFlag(UseCondition.AutoSnap))
+    //     {
+    //         float dist = Vector3.Distance(_currentObject.transform.position, SnapTarget.position);
+
+    //         if (dist < _autoSnapDistance)
+    //             return true;
+    //     }
+
+    //     return false;
+    // }
+
+    private void FixedUpdate()
+{
+    if (!_conditions.HasFlag(UseCondition.AutoSnap)) return;
+    if (_currentObject == null || _isSnapping) return;
+
+    float dist = Vector3.Distance(
+        _currentObject.transform.position,
+        SnapTarget.position
+    );
+
+    if (dist < _autoSnapDistance)
+    {
+        StartSnap();
+    }
+}
+    
 
     private void CreateHologram(GameObject source)
     {
@@ -168,8 +218,6 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
 
     private IEnumerator SnapAndLock()
     {
-        ClearHologram();
-
         var obj = _currentObject.transform;
         var grab = _currentObject.Grab;
         var rb = _currentObject.GetComponent<Rigidbody>();
@@ -205,6 +253,7 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
 
         InteractionManager.Instance.NotifyUsed(this);
 
+        Unsubscribe(_currentObject);
         _currentObject = null;
         _isSnapping = false;
     }

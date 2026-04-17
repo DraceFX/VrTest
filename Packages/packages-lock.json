@@ -342,7 +342,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.openxr.picoxr": {
-      "version": "file:C:/Users/Drace/Desktop/PicoOpenXRSDK",
+      "version": "file:C:/Users/PC/Downloads/PicoOpenXRSDK",
       "depth": 0,
       "source": "local",
       "dependencies": {
