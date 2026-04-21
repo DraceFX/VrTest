@@ -16,7 +16,6 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
     [SerializeField] private float _autoSnapDistance = 0.2f;
     [SerializeField] private Transform _snapTransform;
 
-
     [Header("Hologram")]
     [SerializeField] private Material _hologramMaterial;
 
@@ -40,8 +39,8 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
         if (obj == null || obj.Id != _id) return;
 
         _currentObject = obj;
-CreateHologram(obj.gameObject);
-Subscribe(obj);
+        CreateHologram(obj.gameObject);
+        Subscribe(obj);
     }
 
     private void OnTriggerExit(Collider other)
@@ -50,120 +49,71 @@ Subscribe(obj);
 
         if (other.gameObject == _currentObject.gameObject)
         {
-           Unsubscribe(_currentObject);
-ClearHologram();
-_currentObject = null;
+            Unsubscribe(_currentObject);
+            ClearHologram();
+            _currentObject = null;
         }
     }
 
     private void Subscribe(InteractableObject obj)
-{
-    if (obj.Grab != null)
     {
-        obj.Grab.selectExited.AddListener(OnReleased);
-obj.Grab.activated.AddListener(OnActivated);
+        if (obj.Grab != null)
+        {
+            obj.Grab.selectExited.AddListener(OnReleased);
+            obj.Grab.activated.AddListener(OnActivated);
+        }
     }
-}
 
-private void Unsubscribe(InteractableObject obj)
-{
-    if (obj != null && obj.Grab != null)
+    private void Unsubscribe(InteractableObject obj)
     {
-        obj.Grab.selectExited.RemoveListener(OnReleased);
-obj.Grab.activated.RemoveListener(OnActivated);
+        if (obj != null && obj.Grab != null)
+        {
+            obj.Grab.selectExited.RemoveListener(OnReleased);
+            obj.Grab.activated.RemoveListener(OnActivated);
+        }
     }
-}
 
-private void OnReleased(SelectExitEventArgs args)
-{
-    if (!_conditions.HasFlag(UseCondition.ReleaseGrab)) return;
-    if (_currentObject == null || _isSnapping) return;
-
-    StartSnap();
-}
-
-private void OnActivated(ActivateEventArgs args)
-{
-    if (!_conditions.HasFlag(UseCondition.TriggerPress)) return;
-    if (_currentObject == null || _isSnapping) return;
-
-    StartSnap();
-}
-
-private void StartSnap()
-{
-    if (_isSnapping) return;
-
-    _isSnapping = true;
-    ClearHologram();
-    StartCoroutine(SnapAndLock());
-}
-
-    // private bool CheckConditions()
-    // {
-    //     var grab = _currentObject.Grab;
-
-    //     // Release Grab
-    //     if (_conditions.HasFlag(UseCondition.ReleaseGrab))
-    //     {
-    //         if (grab != null && !grab.isSelected)
-    //             return true;
-    //     }
-
-    //     // Trigger Press
-    //     if (_conditions.HasFlag(UseCondition.TriggerPress))
-    //     {
-    //         if (grab != null && grab.isSelected)
-    //         {
-    //             var interactor = grab.firstInteractorSelecting;
-
-    //             if (interactor is XRDirectInteractor direct)
-    //             {
-    //                 bool isPressed = direct.xrController.activateInteractionState.active;
-
-    //                 if (isPressed && !_wasTriggerPressed)
-    //                 {
-    //                     _wasTriggerPressed = true;
-    //                     return true;
-    //                 }
-
-    //                 _wasTriggerPressed = isPressed;
-    //             }
-    //         }
-    //         else
-    //         {
-    //             _wasTriggerPressed = false;
-    //         }
-    //     }
-
-    //     // AutoSnap
-    //     if (_conditions.HasFlag(UseCondition.AutoSnap))
-    //     {
-    //         float dist = Vector3.Distance(_currentObject.transform.position, SnapTarget.position);
-
-    //         if (dist < _autoSnapDistance)
-    //             return true;
-    //     }
-
-    //     return false;
-    // }
-
-    private void FixedUpdate()
-{
-    if (!_conditions.HasFlag(UseCondition.AutoSnap)) return;
-    if (_currentObject == null || _isSnapping) return;
-
-    float dist = Vector3.Distance(
-        _currentObject.transform.position,
-        SnapTarget.position
-    );
-
-    if (dist < _autoSnapDistance)
+    private void OnReleased(SelectExitEventArgs args)
     {
+        if (!_conditions.HasFlag(UseCondition.ReleaseGrab)) return;
+        if (_currentObject == null || _isSnapping) return;
+
         StartSnap();
     }
-}
-    
+
+    private void OnActivated(ActivateEventArgs args)
+    {
+        if (!_conditions.HasFlag(UseCondition.TriggerPress)) return;
+        if (_currentObject == null || _isSnapping) return;
+
+        StartSnap();
+    }
+
+    private void StartSnap()
+    {
+        if (_isSnapping) return;
+
+        _isSnapping = true;
+        ClearHologram();
+        StartCoroutine(SnapAndLock());
+    }
+
+    private void FixedUpdate()
+    {
+        if (!_conditions.HasFlag(UseCondition.AutoSnap)) return;
+        if (_currentObject == null || _isSnapping) return;
+
+        float dist = Vector3.Distance(
+            _currentObject.transform.position,
+            SnapTarget.position
+        );
+
+        if (dist < _autoSnapDistance)
+        {
+            StartSnap();
+        }
+    }
+
 
     private void CreateHologram(GameObject source)
     {
