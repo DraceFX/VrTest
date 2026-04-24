@@ -4,8 +4,8 @@ using UnityEngine;
 public class LatheControllerVR : MonoBehaviour
 {
     [Header("Shape Settings")]
-    public int lengthSegments = 120;
-    public int radialSegments = 32;
+    public int lengthSegments = 120;   // число сегментов по длине
+    public int radialSegments = 32;    // число сегментов по углу (теперь важно!)
     public float length = 2f;
     public float initialRadius = 0.5f;
     public float minRadius = 0.05f;
@@ -16,44 +16,43 @@ public class LatheControllerVR : MonoBehaviour
     public enum LatheToolShape
     {
         Turning,
-        Drill,
         Ball,
-        Cone
+        Cone,
+        CuttOff
     }
 
     public LatheToolShape toolShape = LatheToolShape.Turning;
 
     [Range(1f, 89f)]
     public float coneAngle = 45f;
-
     public float toolWidth = 0.05f;
+
+    [Header("Contact (non-axisymmetric)")]
+    [Tooltip("Угловая ширина зоны контакта инструмента (градусы). " +
+             "При значении 360 поведение похоже на оригинал, но всё равно идёт через всю окружность.")]
+    public float contactAngularWidth = 10f;
 
     [Header("Performance")]
     public float updateRate = 0.05f;
     public bool updateNormals = true;
 
-    private Mesh mesh;
-
-    private float[] radii;
+    // Двумерный массив радиусов: [длина, угол]
+    private float[,] radii;
     private Vector3[] vertices;
     private int[] triangles;
 
+    private Mesh mesh;
     private float halfLen;
 
     private float timer;
     private bool dirty;
+    private bool hasBeenSplit = false;
+    private bool canBeSplit = true;
 
-    // =========================
-    // INIT
-    // =========================
     private void Start()
     {
-        mesh = new Mesh();
-        mesh.name = "Lathe Mesh";
-        GetComponent<MeshFilter>().mesh = mesh;
-
+        InitMesh();
         halfLen = length * 0.5f;
-
         InitRadii();
         BuildTopology();
         GenerateVertices();
@@ -62,15 +61,18 @@ public class LatheControllerVR : MonoBehaviour
 
     private void InitRadii()
     {
-        radii = new float[lengthSegments];
-
+        radii = new float[lengthSegments, radialSegments];
         for (int i = 0; i < lengthSegments; i++)
-            radii[i] = initialRadius;
+            for (int j = 0; j < radialSegments; j++)
+                radii[i, j] = initialRadius;
     }
 
-    // =========================
-    // UPDATE
-    // =========================
+    private void InitMesh()
+    {
+        mesh = new Mesh { name = "Lathe Mesh" };
+        GetComponent<MeshFilter>().mesh = mesh;
+    }
+
     private void Update()
     {
         if (tool != null)
@@ -81,61 +83,71 @@ public class LatheControllerVR : MonoBehaviour
         if (dirty && timer >= updateRate)
         {
             timer = 0f;
-
             SmoothRadii();
             GenerateVertices();
             ApplyMesh();
-
+            CheckForCut();
             dirty = false;
         }
     }
 
-    // =========================
-    // CUT LOGIC
-    // =========================
+    // --------------- Обработка контакта с инструментом ---------------
     private void HandleCut()
     {
-        Vector3 local = transform.InverseTransformPoint(tool.position);
+        // Позиция инструмента в локальной системе заготовки
+        Vector3 localTool = transform.InverseTransformPoint(tool.position);
+        float toolX = localTool.x;
 
-        float toolX = local.x;
+        // Текущий угол инструмента вокруг оси X (в радианах)
+        float toolAngle = Mathf.Atan2(localTool.z, localTool.y);
+
+        // Половина угловой ширины в радианах
+        float halfAngularRad = contactAngularWidth * 0.5f * Mathf.Deg2Rad;
 
         for (int i = 0; i < lengthSegments; i++)
         {
             float x = Mathf.Lerp(-halfLen, halfLen, (float)i / (lengthSegments - 1));
 
-            float dx = Mathf.Abs(x - toolX);
+            // Быстрая проверка попадания по длине
+            if (Mathf.Abs(x - toolX) > toolWidth)
+                continue;
 
-            if (dx > toolWidth) continue;
-
-            float targetRadius = GetToolRadiusAt(i, x, local);
-
-            if (targetRadius < radii[i])
+            for (int j = 0; j < radialSegments; j++)
             {
-                radii[i] = Mathf.Max(targetRadius, minRadius);
-                dirty = true;
+                // Угол текущей вершины
+                float vertAngle = j * 2f * Mathf.PI / radialSegments;
+
+                // Разница углов (с учётом цикличности)
+                float diff = Mathf.Abs(Mathf.DeltaAngle(vertAngle * Mathf.Rad2Deg,
+                                                        toolAngle * Mathf.Rad2Deg));
+                if (diff > halfAngularRad * Mathf.Rad2Deg)
+                    continue;
+
+                // Целевой радиус согласно форме инструмента
+                float targetRadius = GetToolRadiusAt(i, x, localTool);
+
+                if (targetRadius < radii[i, j])
+                {
+                    radii[i, j] = Mathf.Max(targetRadius, minRadius);
+                    dirty = true;
+                }
             }
         }
     }
 
-    // =========================
-    // TOOL SHAPES
-    // =========================
+    // --------------- Расчёт целевого радиуса (без изменений) ---------------
     private float GetToolRadiusAt(int index, float x, Vector3 toolLocal)
     {
         switch (toolShape)
         {
             case LatheToolShape.Turning:
                 return TurningTool(toolLocal);
-
-            case LatheToolShape.Drill:
-                return DrillTool(index, x, toolLocal);
-
+            case LatheToolShape.CuttOff:
+                return CutOff(index, x, toolLocal);
             case LatheToolShape.Ball:
                 return BallTool(x, toolLocal);
-
             case LatheToolShape.Cone:
                 return ConeTool(x, toolLocal);
-
             default:
                 return initialRadius;
         }
@@ -146,92 +158,93 @@ public class LatheControllerVR : MonoBehaviour
         return new Vector2(toolLocal.y, toolLocal.z).magnitude;
     }
 
-    private float DrillTool(int index, float x, Vector3 toolLocal)
+    private float CutOff(int index, float x, Vector3 toolLocal)
     {
-        float toolRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
+        float currentRadius = radii[index, 0]; // для проверки берём первый угол (все примерно равны)
+        float dx = Mathf.Abs(x - toolLocal.x);
+        if (dx > toolWidth)
+            return currentRadius;
 
-        float currentRadius = radii[index];
+        float toolDistance = new Vector2(toolLocal.y, toolLocal.z).magnitude;
+        if (toolDistance >= currentRadius)
+            return currentRadius;
 
-        // 1. Проверка: инструмент вообще касается детали?
-        if (toolRadius > currentRadius)
-            return currentRadius; // не режем
-
-        // 2. Проверка: дошли ли по X
-        if (x > toolLocal.x)
-            return toolRadius; // сверло прошло — оставляем отверстие
-
-        // 3. Перед сверлом — ничего не делаем
-        return currentRadius;
+        return Mathf.Max(currentRadius - 0.02f, minRadius);
     }
 
     private float BallTool(float x, Vector3 toolLocal)
     {
         float r = toolWidth;
-
         float dx = x - toolLocal.x;
-
         if (Mathf.Abs(dx) > r)
             return initialRadius;
 
         float radialOffset = Mathf.Sqrt(r * r - dx * dx);
-
         float centerRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
-
         return centerRadius - radialOffset;
     }
 
     private float ConeTool(float x, Vector3 toolLocal)
     {
         float dx = Mathf.Abs(x - toolLocal.x);
-
         float slope = Mathf.Tan(coneAngle * Mathf.Deg2Rad);
-
         float centerRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
-
         return centerRadius + dx * slope;
     }
 
-    // =========================
-    // SMOOTHING
-    // =========================
+    // --------------- Сглаживание двумерного массива ---------------
     private void SmoothRadii(int iterations = 1, float factor = 0.25f)
     {
         for (int it = 0; it < iterations; it++)
         {
-            float[] temp = (float[])radii.Clone();
+            float[,] temp = (float[,])radii.Clone();
 
-            for (int i = 1; i < radii.Length - 1; i++)
-            {
-                float avg = (radii[i - 1] + radii[i] + radii[i + 1]) / 3f;
-                temp[i] = Mathf.Lerp(radii[i], avg, factor);
-            }
+            // Сглаживание по длине для каждого угла
+            // for (int j = 0; j < radialSegments; j++)
+            // {
+            //     for (int i = 1; i < lengthSegments - 1; i++)
+            //     {
+            //         float avg = (radii[i - 1, j] + radii[i, j] + radii[i + 1, j]) / 3f;
+            //         // Важно: не даём радиусу увеличиться!
+            //         temp[i, j] = Mathf.Min(radii[i, j], Mathf.Lerp(radii[i, j], avg, factor));
+            //     }
+            // }
+
+            // Сглаживание по углу (мягкое), тоже с ограничением
+            // float angularFactor = factor * 0.5f;
+            // for (int i = 0; i < lengthSegments; i++)
+            // {
+            //     for (int j = 0; j < radialSegments; j++)
+            //     {
+            //         int prevJ = (j - 1 + radialSegments) % radialSegments;
+            //         int nextJ = (j + 1) % radialSegments;
+            //         float avg = (temp[i, prevJ] + temp[i, j] + temp[i, nextJ]) / 3f;
+            //         temp[i, j] = Mathf.Min(temp[i, j], Mathf.Lerp(temp[i, j], avg, angularFactor));
+            //     }
+            // }
 
             radii = temp;
         }
     }
 
-    // =========================
-    // MESH
-    // =========================
+    // --------------- Построение сетки ---------------
     private void BuildTopology()
     {
         int baseCount = lengthSegments * radialSegments;
-
         vertices = new Vector3[baseCount + 2];
         triangles = new int[(lengthSegments - 1) * radialSegments * 6 + radialSegments * 6];
 
         int leftCenter = baseCount;
         int rightCenter = baseCount + 1;
-
         int tri = 0;
 
+        // Боковая поверхность
         for (int i = 0; i < lengthSegments - 1; i++)
         {
             for (int j = 0; j < radialSegments; j++)
             {
                 int current = i * radialSegments + j;
                 int next = current + radialSegments;
-
                 int nextJ = (j + 1) % radialSegments;
 
                 int currentNext = i * radialSegments + nextJ;
@@ -247,25 +260,22 @@ public class LatheControllerVR : MonoBehaviour
             }
         }
 
-        // left cap
+        // Левая крышка
         for (int j = 0; j < radialSegments; j++)
         {
             int a = j;
             int b = (j + 1) % radialSegments;
-
             triangles[tri++] = leftCenter;
             triangles[tri++] = b;
             triangles[tri++] = a;
         }
 
-        // right cap
+        // Правая крышка
         int offset = (lengthSegments - 1) * radialSegments;
-
         for (int j = 0; j < radialSegments; j++)
         {
             int a = offset + j;
             int b = offset + (j + 1) % radialSegments;
-
             triangles[tri++] = rightCenter;
             triangles[tri++] = a;
             triangles[tri++] = b;
@@ -279,38 +289,113 @@ public class LatheControllerVR : MonoBehaviour
         for (int i = 0; i < lengthSegments; i++)
         {
             float x = Mathf.Lerp(-halfLen, halfLen, (float)i / (lengthSegments - 1));
-            float radius = radii[i];
 
             for (int j = 0; j < radialSegments; j++)
             {
-                float angle = j * Mathf.PI * 2f / radialSegments;
-
-                float y = Mathf.Cos(angle) * radius;
-                float z = Mathf.Sin(angle) * radius;
-
+                float angle = j * 2f * Mathf.PI / radialSegments;
+                float r = radii[i, j];
+                float y = Mathf.Cos(angle) * r;
+                float z = Mathf.Sin(angle) * r;
                 vertices[i * radialSegments + j] = new Vector3(x, y, z);
             }
         }
 
+        // Центры крышек
         vertices[baseCount] = new Vector3(-halfLen, 0, 0);
         vertices[baseCount + 1] = new Vector3(halfLen, 0, 0);
     }
 
     private void ApplyMesh()
     {
+        if (mesh == null) InitMesh();
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
-
-        if (updateNormals)
-            mesh.RecalculateNormals();
-
+        if (updateNormals) mesh.RecalculateNormals();
         mesh.RecalculateBounds();
     }
 
-    // =========================
-    // DEBUG
-    // =========================
+    // --------------- Проверка на отрезку ---------------
+    private void CheckForCut()
+    {
+        for (int i = 2; i < lengthSegments - 2; i++)
+        {
+            // Проверяем, что ВСЕ радиусы в этом сегменте меньше порога
+            bool allThin = true;
+            for (int j = 0; j < radialSegments; j++)
+            {
+                if (radii[i, j] > minRadius * 1.01f)
+                {
+                    allThin = false;
+                    break;
+                }
+            }
+            if (!allThin) continue;
+
+            // Соседи должны быть толще
+            bool leftThick = radii[i - 1, 0] > minRadius * 1.5f;
+            bool rightThick = radii[i + 1, 0] > minRadius * 1.5f;
+
+            if (leftThick || rightThick)
+            {
+                SplitMesh(i);
+                break;
+            }
+        }
+    }
+
+    private void SplitMesh(int cutIndex)
+    {
+        if (!canBeSplit) return;
+
+        float cutX = Mathf.Lerp(-halfLen, halfLen, (float)cutIndex / (lengthSegments - 1));
+
+        // Левая часть
+        int leftCount = cutIndex + 1;
+        float[,] leftRadii = new float[leftCount, radialSegments];
+        for (int i = 0; i < leftCount; i++)
+            for (int j = 0; j < radialSegments; j++)
+                leftRadii[i, j] = radii[i, j];
+
+        // Правая часть
+        int rightCount = lengthSegments - cutIndex;
+        float[,] rightRadii = new float[rightCount, radialSegments];
+        for (int i = 0; i < rightCount; i++)
+            for (int j = 0; j < radialSegments; j++)
+                rightRadii[i, j] = radii[cutIndex + i, j];
+
+        // Создаём правую деталь
+        GameObject rightObj = Instantiate(gameObject, transform.parent);
+        LatheControllerVR rightLathe = rightObj.GetComponent<LatheControllerVR>();
+        Vector3 cutWorld = transform.TransformPoint(new Vector3(cutX, 0, 0));
+
+        rightLathe.SetupAfterSplit(rightRadii, halfLen - cutX, cutWorld);
+        rightLathe.canBeSplit = false;
+        rightLathe.enabled = false;
+        rightLathe.transform.position += new Vector3(1, 0, 0); // сдвиг для наглядности
+
+        // Обновляем левую часть (этот объект)
+        Vector3 leftWorld = transform.TransformPoint(new Vector3((cutX - halfLen) * 0.5f, 0, 0));
+        SetupAfterSplit(leftRadii, cutX + halfLen, leftWorld);
+    }
+
+    private void SetupAfterSplit(float[,] newRadii, float newLength, Vector3 worldPos)
+    {
+        transform.position = worldPos;
+        InitMesh();
+
+        radii = newRadii;
+        lengthSegments = radii.GetLength(0);
+        radialSegments = radii.GetLength(1);
+        length = newLength;
+        halfLen = length * 0.5f;
+
+        BuildTopology();
+        GenerateVertices();
+        ApplyMesh();
+    }
+
+    // --------------- Отладка ---------------
     private void OnDrawGizmosSelected()
     {
         if (tool != null)
@@ -319,33 +404,21 @@ public class LatheControllerVR : MonoBehaviour
             Gizmos.DrawSphere(tool.position, 0.02f);
         }
         Gizmos.color = Color.cyan;
-
-        float halfLen = length * 0.5f;
-        float radius = initialRadius;
-
-        Vector3 center = transform.position;
-
-        DrawWireCylinder(center, halfLen, radius, 32);
+        DrawWireCylinder(transform.position, length * 0.5f, initialRadius, 32);
     }
 
     private void DrawWireCylinder(Vector3 center, float halfLength, float radius, int segments)
     {
         Vector3 leftCenter = center + Vector3.left * halfLength;
         Vector3 rightCenter = center + Vector3.right * halfLength;
-
-        Vector3 prevLeft = Vector3.zero;
-        Vector3 prevRight = Vector3.zero;
+        Vector3 prevLeft = Vector3.zero, prevRight = Vector3.zero;
 
         for (int i = 0; i <= segments; i++)
         {
-            float t = (float)i / segments;
-            float angle = t * Mathf.PI * 2f;
-
+            float angle = (float)i / segments * Mathf.PI * 2f;
             float y = Mathf.Cos(angle) * radius;
             float z = Mathf.Sin(angle) * radius;
-
             Vector3 offset = new Vector3(0, y, z);
-
             Vector3 pLeft = leftCenter + offset;
             Vector3 pRight = rightCenter + offset;
 
@@ -355,7 +428,6 @@ public class LatheControllerVR : MonoBehaviour
                 Gizmos.DrawLine(prevRight, pRight);
                 Gizmos.DrawLine(prevLeft, prevRight);
             }
-
             prevLeft = pLeft;
             prevRight = pRight;
         }

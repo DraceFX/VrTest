@@ -14378,6 +14378,7 @@ GameObject:
   - component: {fileID: 1780997423}
   - component: {fileID: 1780997422}
   - component: {fileID: 1780997421}
+  - component: {fileID: 1780997425}
   m_Layer: 0
   m_Name: Lathe
   m_TagString: Untagged
@@ -14406,6 +14407,7 @@ MonoBehaviour:
   toolShape: 0
   coneAngle: 45
   toolWidth: 0.05
+  contactAngularWidth: 10
   updateRate: 0.05
   updateNormals: 1
 --- !u!23 &1780997422
@@ -14480,6 +14482,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1780997425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1780997420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7c17afc0fab174b8344ebb6ad95dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnWorkpiece
+  _rotationSpeed: {x: 360, y: 0, z: 0}
 --- !u!1 &1799418620
 GameObject:
   m_ObjectHideFlags: 0
