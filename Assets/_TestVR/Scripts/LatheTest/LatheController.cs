@@ -13,24 +13,7 @@ public class LatheControllerVR : MonoBehaviour
     [Header("Tool")]
     public Transform tool;
 
-    public enum LatheToolShape
-    {
-        Turning,
-        Ball,
-        Cone,
-        CuttOff
-    }
-
-    public LatheToolShape toolShape = LatheToolShape.Turning;
-
-    [Range(1f, 89f)]
-    public float coneAngle = 45f;
-    public float toolWidth = 0.05f;
-
-    [Header("Contact (non-axisymmetric)")]
-    [Tooltip("Угловая ширина зоны контакта инструмента (градусы). " +
-             "При значении 360 поведение похоже на оригинал, но всё равно идёт через всю окружность.")]
-    public float contactAngularWidth = 10f;
+    public ToolTypeLathe LatheTool;
 
     [Header("Performance")]
     public float updateRate = 0.05f;
@@ -46,8 +29,8 @@ public class LatheControllerVR : MonoBehaviour
 
     private float timer;
     private bool dirty;
-    private bool hasBeenSplit = false;
     private bool canBeSplit = true;
+    private bool isCutt = false;
 
     private void Start()
     {
@@ -75,19 +58,37 @@ public class LatheControllerVR : MonoBehaviour
 
     private void Update()
     {
-        if (tool != null)
-            HandleCut();
+        if (isCutt == false) return;
+        
+            if (tool != null)
+                HandleCut();
 
-        timer += Time.deltaTime;
+            timer += Time.deltaTime;
 
-        if (dirty && timer >= updateRate)
+            if (dirty && timer >= updateRate)
+            {
+                timer = 0f;
+                SmoothRadii();
+                GenerateVertices();
+                ApplyMesh();
+                CheckForCut();
+                dirty = false;
+            }
+        
+    }
+
+    public void StartCutting() => isCutt = true;
+    public void FinishCutting() => isCutt = false;
+
+    public void CanCutting(bool isCutting)
+    {
+        if (isCutting)
         {
-            timer = 0f;
-            SmoothRadii();
-            GenerateVertices();
-            ApplyMesh();
-            CheckForCut();
-            dirty = false;
+            StartCutting();
+        }
+        else
+        {
+            FinishCutting();
         }
     }
 
@@ -102,14 +103,14 @@ public class LatheControllerVR : MonoBehaviour
         float toolAngle = Mathf.Atan2(localTool.z, localTool.y);
 
         // Половина угловой ширины в радианах
-        float halfAngularRad = contactAngularWidth * 0.5f * Mathf.Deg2Rad;
+        float halfAngularRad = LatheTool.contactAngularWidth * 0.5f * Mathf.Deg2Rad;
 
         for (int i = 0; i < lengthSegments; i++)
         {
             float x = Mathf.Lerp(-halfLen, halfLen, (float)i / (lengthSegments - 1));
 
             // Быстрая проверка попадания по длине
-            if (Mathf.Abs(x - toolX) > toolWidth)
+            if (Mathf.Abs(x - toolX) > LatheTool.toolWidth)
                 continue;
 
             for (int j = 0; j < radialSegments; j++)
@@ -138,7 +139,7 @@ public class LatheControllerVR : MonoBehaviour
     // --------------- Расчёт целевого радиуса (без изменений) ---------------
     private float GetToolRadiusAt(int index, float x, Vector3 toolLocal)
     {
-        switch (toolShape)
+        switch (LatheTool.toolShape)
         {
             case LatheToolShape.Turning:
                 return TurningTool(toolLocal);
@@ -162,7 +163,7 @@ public class LatheControllerVR : MonoBehaviour
     {
         float currentRadius = radii[index, 0]; // для проверки берём первый угол (все примерно равны)
         float dx = Mathf.Abs(x - toolLocal.x);
-        if (dx > toolWidth)
+        if (dx > LatheTool.toolWidth)
             return currentRadius;
 
         float toolDistance = new Vector2(toolLocal.y, toolLocal.z).magnitude;
@@ -174,7 +175,7 @@ public class LatheControllerVR : MonoBehaviour
 
     private float BallTool(float x, Vector3 toolLocal)
     {
-        float r = toolWidth;
+        float r = LatheTool.toolWidth;
         float dx = x - toolLocal.x;
         if (Mathf.Abs(dx) > r)
             return initialRadius;
@@ -187,7 +188,7 @@ public class LatheControllerVR : MonoBehaviour
     private float ConeTool(float x, Vector3 toolLocal)
     {
         float dx = Mathf.Abs(x - toolLocal.x);
-        float slope = Mathf.Tan(coneAngle * Mathf.Deg2Rad);
+        float slope = Mathf.Tan(LatheTool.coneAngle * Mathf.Deg2Rad);
         float centerRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
         return centerRadius + dx * slope;
     }
