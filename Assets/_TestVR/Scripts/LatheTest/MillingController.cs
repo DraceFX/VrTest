@@ -12,26 +12,12 @@ public class MillingСontrollerVR : MonoBehaviour
     public float minThickness = 0.05f;
 
     [Header("Cut Settings")]
-    public float cutStrength = 0.01f;
-    public float toolRadius = 0.05f;
     public Transform tool;
+    public ToolTypeMilling MillingType;
 
     [Header("Performance")]
     public float updateRate = 0.05f;
     public bool updateNormals = true;
-
-    public enum ToolShape
-    {
-        Flat,
-        Ball,
-        Cone
-    }
-
-    [Header("Tool Shape")]
-    public ToolShape toolShape = ToolShape.Flat;
-
-    [Range(1f, 89f)]
-    public float coneAngle = 45f; // для конуса
 
     private Mesh mesh;
 
@@ -111,7 +97,7 @@ public class MillingСontrollerVR : MonoBehaviour
     {
         Vector3 toolLocal = transform.InverseTransformPoint(tool.position);
 
-        float radiusSq = toolRadius * toolRadius;
+        float radiusSq = MillingType.toolRadius * MillingType.toolRadius;
 
         for (int x = 0; x < vertCountX; x++)
         {
@@ -130,7 +116,7 @@ public class MillingСontrollerVR : MonoBehaviour
 
                 float dist = Mathf.Sqrt(distSq);
 
-                float targetY = GetToolHeight(toolLocal.y, dist);
+                float targetY = MillingType.GetToolHeight(toolLocal.y, dist);
 
                 // снимаем материал только если инструмент ниже поверхности
                 if (heightMap[x, z] > targetY)
@@ -144,48 +130,6 @@ public class MillingСontrollerVR : MonoBehaviour
         }
 
         dirty = true;
-    }
-
-    private float GetToolHeight(float toolY, float distance)
-    {
-        switch (toolShape)
-        {
-            case ToolShape.Flat:
-                return FlatTool(toolY);
-
-            case ToolShape.Ball:
-                return BallTool(toolY, distance);
-
-            case ToolShape.Cone:
-                return ConeTool(toolY, distance);
-
-            default:
-                return toolY;
-        }
-    }
-
-    private float FlatTool(float toolY)
-    {
-        return toolY;
-    }
-
-    private float BallTool(float toolY, float distance)
-    {
-        float r = toolRadius;
-
-        // уравнение сферы
-        float h = Mathf.Sqrt(r * r - distance * distance);
-
-        return toolY + (r - h);
-    }
-
-    private float ConeTool(float toolY, float distance)
-    {
-        float angleRad = coneAngle * Mathf.Deg2Rad;
-
-        float slope = Mathf.Tan(angleRad);
-
-        return toolY + distance * slope;
     }
 
     // =========================
@@ -352,7 +296,7 @@ public class MillingСontrollerVR : MonoBehaviour
         if (tool != null)
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(tool.position, toolRadius);
+            Gizmos.DrawWireSphere(tool.position, MillingType.toolRadius);
         }
 
         Gizmos.color = Color.cyan;

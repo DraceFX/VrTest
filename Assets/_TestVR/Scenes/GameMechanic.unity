@@ -894,13 +894,10 @@ MonoBehaviour:
   depthSegments: 120
   dimensions: {x: 1, y: 1, z: 1}
   minThickness: 0.05
-  cutStrength: 0.01
-  toolRadius: 0.05
   tool: {fileID: 1493060422}
+  MillingType: {fileID: 11400000, guid: ab3e1c2745ccde343bad5a3a5625a8cc, type: 2}
   updateRate: 0.05
   updateNormals: 1
-  toolShape: 0
-  coneAngle: 45
 --- !u!23 &135177543
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -14404,10 +14401,7 @@ MonoBehaviour:
   initialRadius: 0.5
   minRadius: 0.05
   tool: {fileID: 589949160}
-  toolShape: 0
-  coneAngle: 45
-  toolWidth: 0.05
-  contactAngularWidth: 10
+  LatheTool: {fileID: 11400000, guid: 522d74355d5874d46b81ef55c4c792f1, type: 2}
   updateRate: 0.05
   updateNormals: 1
 --- !u!23 &1780997422
