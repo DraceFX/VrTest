@@ -30,7 +30,8 @@ public class LatheControllerVR : MonoBehaviour
     private float timer;
     private bool dirty;
     private bool canBeSplit = true;
-    private bool isCutt = false;
+
+    private bool isCutt = true;
 
     private void Start()
     {
@@ -58,7 +59,7 @@ public class LatheControllerVR : MonoBehaviour
 
     private void Update()
     {
-        if (isCutt == false) return;
+        if (!isCutt) return;
         
             if (tool != null)
                 HandleCut();

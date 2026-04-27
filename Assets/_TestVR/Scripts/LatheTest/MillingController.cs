@@ -37,6 +37,8 @@ public class MillingСontrollerVR : MonoBehaviour
     private float halfY;
     private float halfZ;
 
+    private bool isCutt = true;
+
     // =========================
     // INIT
     // =========================
@@ -71,11 +73,28 @@ public class MillingСontrollerVR : MonoBehaviour
         }
     }
 
+    public void StartCutting() => isCutt = true;
+    public void FinishCutting() => isCutt = false;
+
+    public void CanCutting(bool isCutting)
+    {
+        if (isCutting)
+        {
+            StartCutting();
+        }
+        else
+        {
+            FinishCutting();
+        }
+    }
+
     // =========================
     // UPDATE
     // =========================
     private void Update()
     {
+        if (!isCutt) return;
+        
         if (tool != null)
             HandleCut();
 
