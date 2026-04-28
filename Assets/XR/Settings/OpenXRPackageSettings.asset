@@ -122,7 +122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 077bca9897b444788c83491c066a79b1, type: 3}
   m_Name: OpenXRExtensions Android
   m_EditorClassIdentifier: Unity.XR.OpenXR.Features.PICOSupport::Unity.XR.OpenXR.Features.PICOSupport.OpenXRExtensions
-  m_enabled: 1
+  m_enabled: 0
   nameUi: PICO OpenXR Features
   version: 1.0.0
   featureIdInternal: com.unity.openxr.pico.features
@@ -770,7 +770,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: baa5b568c4324bd4faad2da2e7ee7e84, type: 3}
   m_Name: PICOFeature Android
   m_EditorClassIdentifier: Unity.XR.OpenXR.Features.PICOSupport::Unity.XR.OpenXR.Features.PICOSupport.PICOFeature
-  m_enabled: 1
+  m_enabled: 0
   nameUi: PICO Support
   version: 1.4.1
   featureIdInternal: com.unity.openxr.feature.pico
@@ -1035,7 +1035,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90ae1e8c3c7a542bba339faf2e771c5a, type: 3}
   m_Name: AndroidXRSupportFeature Android
   m_EditorClassIdentifier: Unity.XR.AndroidOpenXR::UnityEngine.XR.OpenXR.Features.Android.AndroidXRSupportFeature
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Android XR Support
   version: 1.0.0
   featureIdInternal: com.unity.openxr.feature.androidxr-support
@@ -1361,8 +1361,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.OpenXRSettings
   features:
   - {fileID: 175552669629818488}
-  - {fileID: 4509820571255899653}
-  - {fileID: 6287978633235467406}
+  - {fileID: 4090453797360347131}
+  - {fileID: 5222640592169054065}
   - {fileID: 2069905758192890081}
   - {fileID: 120453148605477842}
   - {fileID: 7516680231693121496}
@@ -1373,7 +1373,7 @@ MonoBehaviour:
   - {fileID: 7305266055073767700}
   - {fileID: -2839948815167008975}
   - {fileID: -4358071862659925092}
-  - {fileID: 8679408677544406686}
+  - {fileID: 5337870663263339361}
   - {fileID: 2095100412583041009}
   - {fileID: -3284245634213833371}
   - {fileID: 6376958294201565265}

@@ -1,0 +1,11 @@
+﻿<Solution>
+  <Project Path="PICO.TobSupport.csproj" />
+  <Project Path="Unity.XR.OpenXR.Features.PICOSupport.csproj" />
+  <Project Path="PICO.Platform.Editor.csproj" />
+  <Project Path="PICO.Platform.csproj" />
+  <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.csproj" />
+  <Project Path="Unity.XR.OpenXRPico.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Unity.XR.OpenXR.Features.PICOSupport.Editor.csproj" />
+  <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.Editor.csproj" />
+</Solution>

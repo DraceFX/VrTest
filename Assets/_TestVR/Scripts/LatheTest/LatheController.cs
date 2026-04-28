@@ -60,22 +60,22 @@ public class LatheControllerVR : MonoBehaviour
     private void Update()
     {
         if (!isCutt) return;
-        
-            if (tool != null)
-                HandleCut();
 
-            timer += Time.deltaTime;
+        if (tool != null)
+            HandleCut();
 
-            if (dirty && timer >= updateRate)
-            {
-                timer = 0f;
-                SmoothRadii();
-                GenerateVertices();
-                ApplyMesh();
-                CheckForCut();
-                dirty = false;
-            }
-        
+        timer += Time.deltaTime;
+
+        if (dirty && timer >= updateRate)
+        {
+            timer = 0f;
+            SmoothRadii();
+            GenerateVertices();
+            ApplyMesh();
+            CheckForCut();
+            dirty = false;
+        }
+
     }
 
     public void StartCutting() => isCutt = true;
