@@ -126,7 +126,8 @@ public class LatheControllerVR : MonoBehaviour
                     continue;
 
                 // Целевой радиус согласно форме инструмента
-                float targetRadius = GetToolRadiusAt(i, x, localTool);
+                float currentRadius = radii[i, j];
+                float targetRadius = LatheTool.GetToolRadiusAt(i, x, localTool, currentRadius, initialRadius, minRadius);
 
                 if (targetRadius < radii[i, j])
                 {
@@ -137,64 +138,6 @@ public class LatheControllerVR : MonoBehaviour
         }
     }
 
-    // --------------- Расчёт целевого радиуса (без изменений) ---------------
-    private float GetToolRadiusAt(int index, float x, Vector3 toolLocal)
-    {
-        switch (LatheTool.toolShape)
-        {
-            case LatheToolShape.Turning:
-                return TurningTool(toolLocal);
-            case LatheToolShape.CuttOff:
-                return CutOff(index, x, toolLocal);
-            case LatheToolShape.Ball:
-                return BallTool(x, toolLocal);
-            case LatheToolShape.Cone:
-                return ConeTool(x, toolLocal);
-            default:
-                return initialRadius;
-        }
-    }
-
-    private float TurningTool(Vector3 toolLocal)
-    {
-        return new Vector2(toolLocal.y, toolLocal.z).magnitude;
-    }
-
-    private float CutOff(int index, float x, Vector3 toolLocal)
-    {
-        float currentRadius = radii[index, 0]; // для проверки берём первый угол (все примерно равны)
-        float dx = Mathf.Abs(x - toolLocal.x);
-        if (dx > LatheTool.toolWidth)
-            return currentRadius;
-
-        float toolDistance = new Vector2(toolLocal.y, toolLocal.z).magnitude;
-        if (toolDistance >= currentRadius)
-            return currentRadius;
-
-        return Mathf.Max(currentRadius - 0.02f, minRadius);
-    }
-
-    private float BallTool(float x, Vector3 toolLocal)
-    {
-        float r = LatheTool.toolWidth;
-        float dx = x - toolLocal.x;
-        if (Mathf.Abs(dx) > r)
-            return initialRadius;
-
-        float radialOffset = Mathf.Sqrt(r * r - dx * dx);
-        float centerRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
-        return centerRadius - radialOffset;
-    }
-
-    private float ConeTool(float x, Vector3 toolLocal)
-    {
-        float dx = Mathf.Abs(x - toolLocal.x);
-        float slope = Mathf.Tan(LatheTool.coneAngle * Mathf.Deg2Rad);
-        float centerRadius = new Vector2(toolLocal.y, toolLocal.z).magnitude;
-        return centerRadius + dx * slope;
-    }
-
-    // --------------- Сглаживание двумерного массива ---------------
     private void SmoothRadii(int iterations = 1, float factor = 0.25f)
     {
         for (int it = 0; it < iterations; it++)
