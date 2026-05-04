@@ -5,9 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/_TestVR/Scenes/GameMechanic.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/_TestVR/Scenes/WeldingTest.unity
+    guid: b13b2f247f1e9e246a3e05010ece1637
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 4b10e1ad5bd5f9144b6a9a86b9033e2c, type: 2}
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: b0fd4a6f2fb7b8d48940068536e4bcf6, type: 2}
