@@ -6,11 +6,12 @@ TagManager:
   tags:
   - Camera1
   - TestObject
+  - PPE
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - WeldableMask
   - Water
   - UI
   - 

@@ -10,6 +10,12 @@ public class Electrode : MonoBehaviour
     [SerializeField] private XRGrabInteractable grabInteractable;
     public Rigidbody rb;
 
+    [Header("Geometry")]
+    public float length = 1f;
+
+    [Header("Welding Source")]
+    public float weldDistance = 0.215f;
+
 
     private void Awake()
     {
@@ -44,5 +50,13 @@ public class Electrode : MonoBehaviour
         {
             CurrentSocket.TryAttachElectrode(this);
         }
+    }
+
+    public void Burn(float amount)
+    {
+        length -= amount;
+        length = Mathf.Max(length, 0f);
+
+        transform.localScale = new Vector3(1f, 1f, length);
     }
 }

@@ -19,6 +19,10 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
     [Header("Hologram")]
     [SerializeField] private Material _hologramMaterial;
 
+    [Header("Replacement")]
+    [SerializeField] private bool _useReplacement;
+    [SerializeField] private GameObject _replacementObject;
+
     private InteractableObject _currentObject;
     private GameObject _hologramInstance;
 
@@ -200,6 +204,23 @@ public class InteractableTrigger : MonoBehaviour, IObjectEnter
         obj.SetParent(SnapTarget);
         obj.localPosition = Vector3.zero;
         obj.localRotation = Quaternion.identity;
+
+        // === НОВАЯ ЛОГИКА ===
+        if (_useReplacement)
+        {
+            if (_replacementObject == null)
+            {
+                // 1. Нет replacement → просто отключаем вставленный объект
+                obj.gameObject.SetActive(false);
+            }
+            else
+            {
+                // 2. Есть replacement → заменяем
+                Instantiate(_replacementObject, SnapTarget.position, SnapTarget.rotation, SnapTarget);
+
+                Destroy(obj.gameObject);
+            }
+        }
 
         InteractionManager.Instance.NotifyUsed(this);
 

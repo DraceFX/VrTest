@@ -13,6 +13,9 @@ public class ElectrodeSocket : MonoBehaviour
 
     public Electrode AttachedElectrode { get; private set; }
 
+    public System.Action<Electrode> OnElectrodeAttached;
+    public System.Action OnElectrodeDetached;
+
     /// Пытается прикрепить электрод к держателю.
     public void TryAttachElectrode(Electrode electrode)
     {
@@ -51,6 +54,9 @@ public class ElectrodeSocket : MonoBehaviour
 
         // Отключаем физику
         electrode.rb.isKinematic = true;
+
+        AttachedElectrode = electrode;
+        OnElectrodeAttached?.Invoke(electrode);
     }
 
     /// Открепляет электрод от держателя.
@@ -64,6 +70,9 @@ public class ElectrodeSocket : MonoBehaviour
         electrode.AttachedSocket = null;
         electrode.transform.SetParent(null);
         electrode.rb.isKinematic = false;
+
+        AttachedElectrode = null;
+        OnElectrodeDetached?.Invoke();
     }
 
     /// <summary>Извлекает угол поворота вокруг заданной оси из кватерниона.</summary>
