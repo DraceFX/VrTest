@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6441032631526659490}
   m_Layer: 0
   m_Name: Mask
-  m_TagString: Untagged
+  m_TagString: PPE
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -104,7 +104,7 @@ GameObject:
   - component: {fileID: 6781342174362307884}
   m_Layer: 0
   m_Name: Glass
-  m_TagString: Untagged
+  m_TagString: PPE
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -119,7 +119,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -0.00015}
-  m_LocalScale: {x: 1, y: 1.05, z: 1.09}
+  m_LocalScale: {x: 1, y: 1.05, z: 1.15}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7902744954507349438}
@@ -196,7 +196,7 @@ GameObject:
   - component: {fileID: 499971291663919496}
   m_Layer: 0
   m_Name: MaskPivot
-  m_TagString: Untagged
+  m_TagString: PPE
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
