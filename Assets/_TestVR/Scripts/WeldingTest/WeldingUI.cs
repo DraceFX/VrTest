@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,9 +10,13 @@ public class WeldingUI : MonoBehaviour
     public Slider currentSlider;
     public Slider voltageSlider;
 
-    [SerializeField] private Toggle _toggleMask;
-    [SerializeField] private Toggle _toggleApron;
-    [SerializeField] private Toggle _toggleBoots;
+    [SerializeField] private List<PPEToggle> _toggles;
+
+    // [SerializeField] private Toggle _toggleMask;
+    // [SerializeField] private Toggle _toggleApron;
+    // [SerializeField] private Toggle _toggleBoots;
+    // [SerializeField] private Toggle _toggleLeftGlove;
+    // [SerializeField] private Toggle _toggleRightGlove;
 
     private void Start()
     {
@@ -24,19 +30,42 @@ public class WeldingUI : MonoBehaviour
     {
         if (trigger == null) return;
 
-        switch (trigger.Id)
+        foreach (var toggle in _toggles)
         {
-            case "Mask":
-                _toggleMask.isOn = true;
-                break;
-
-            case "Apron":
-                _toggleApron.isOn = true;
-                break;
-
-            case "Boots":
-                _toggleBoots.isOn = true;
-                break;
+            if (toggle.Id == trigger.Id)
+            {
+                toggle.TogglePPE.isOn = true;
+            }
         }
+
+        // switch (trigger.Id)
+        // {
+        //     case "Mask":
+        //         _toggleMask.isOn = true;
+        //         break;
+
+        //     case "Apron":
+        //         _toggleApron.isOn = true;
+        //         break;
+
+        //     case "Boots":
+        //         _toggleBoots.isOn = true;
+        //         break;
+
+        //     case "LeftGlove":
+        //         _toggleLeftGlove.isOn = true;
+        //         break;
+
+        //     case "RightGlove":
+        //         _toggleLeftGlove.isOn = true;
+        //         break;
+        // }
     }
+}
+
+[Serializable]
+public class PPEToggle
+{
+    public string Id;
+    public Toggle TogglePPE;
 }

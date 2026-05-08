@@ -2,22 +2,22 @@ using UnityEngine;
 
 public class Weldable : MonoBehaviour
 {
-    public Rigidbody rb;
-    public float health = 100f;
+    [SerializeField] private Rigidbody rb;
+
+    public Rigidbody Rigidbody
+    {
+        get
+        {
+            if (rb == null)
+                rb = GetComponentInParent<Rigidbody>();
+            return rb;
+        }
+    }
 
     private void Awake()
     {
+        // Автоматически подхватываем Rigidbody, если он не назначен
         if (rb == null)
-            rb = GetComponent<Rigidbody>();
-    }
-
-    public void ApplyDamage(float dmg)
-    {
-        health -= dmg;
-
-        if (health <= 0f)
-        {
-            Destroy(gameObject);
-        }
+            rb = GetComponentInParent<Rigidbody>();
     }
 }
