@@ -19,10 +19,12 @@ public class Electrode : MonoBehaviour
     public Transform tip;
     public float weldDistance = 0.03f;
 
+    [Header("Поиск соседней детали")]
+    public float searchRadius = 0.08f;
+
     private bool effectsActive = false;
     private float currentPower;
     private float optimalPower;
-
 
     private void Awake()
     {

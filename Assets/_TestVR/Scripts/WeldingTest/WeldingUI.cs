@@ -7,21 +7,15 @@ public class WeldingUI : MonoBehaviour
 {
     public WeldingSettings settings;
 
-    public Slider currentSlider;
-    public Slider voltageSlider;
+    // public Slider currentSlider;
+    // public Slider voltageSlider;
 
     [SerializeField] private List<PPEToggle> _toggles;
 
-    // [SerializeField] private Toggle _toggleMask;
-    // [SerializeField] private Toggle _toggleApron;
-    // [SerializeField] private Toggle _toggleBoots;
-    // [SerializeField] private Toggle _toggleLeftGlove;
-    // [SerializeField] private Toggle _toggleRightGlove;
-
     private void Start()
     {
-        currentSlider.onValueChanged.AddListener(v => settings.current = v);
-        voltageSlider.onValueChanged.AddListener(v => settings.voltage = v);
+        // currentSlider.onValueChanged.AddListener(v => settings.current = v);
+        // voltageSlider.onValueChanged.AddListener(v => settings.voltage = v);
 
         InteractionManager.Instance.OnObjectUsed += HandleObjectUsed;
     }
@@ -37,29 +31,6 @@ public class WeldingUI : MonoBehaviour
                 toggle.TogglePPE.isOn = true;
             }
         }
-
-        // switch (trigger.Id)
-        // {
-        //     case "Mask":
-        //         _toggleMask.isOn = true;
-        //         break;
-
-        //     case "Apron":
-        //         _toggleApron.isOn = true;
-        //         break;
-
-        //     case "Boots":
-        //         _toggleBoots.isOn = true;
-        //         break;
-
-        //     case "LeftGlove":
-        //         _toggleLeftGlove.isOn = true;
-        //         break;
-
-        //     case "RightGlove":
-        //         _toggleLeftGlove.isOn = true;
-        //         break;
-        // }
     }
 }
 

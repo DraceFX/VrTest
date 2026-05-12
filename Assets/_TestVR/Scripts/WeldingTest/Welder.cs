@@ -15,19 +15,20 @@ public class Welder : MonoBehaviour
     [Header("Градиент температуры")]
     public Gradient temperatureGradient;
 
-    [Header("Поиск соседней детали")]
-    [SerializeField] private float searchRadius = 0.08f;
     [SerializeField] private bool debugMode = true;
 
     private bool isActivated = false;
-    private Weldable targetA, targetB;
     private bool isAssemblyCreated = false;
+    private bool effectsPlaying = false;
+
+    private Weldable targetA;
+    private Weldable targetB;
+
     private WeldAssembly currentAssembly;
     private WeldMeshBuilder activeBuilder;
 
     // Текущий активный электрод и флаг эффектов
     private Electrode currentElectrode;
-    private bool effectsPlaying = false;
 
     public void SetActivated(bool state)
     {
@@ -118,6 +119,14 @@ public class Welder : MonoBehaviour
 
         if (targetB == null) return false;   // нет второго объекта — сварка невозможна
 
+        if (!targetA.IsGrounded || !targetB.IsGrounded)
+        {
+            if (debugMode)
+                Debug.Log($"[Welder] Сварка невозможна: один из объектов не заземлён " +
+                          $"(A заземлён: {targetA.IsGrounded}, B заземлён: {targetB.IsGrounded})");
+            return false;   // контакт не засчитывается
+        }
+
         // Мгновенное создание узла, если ещё не создан
         if (!isAssemblyCreated)
             ExecuteWeld();
@@ -176,7 +185,7 @@ public class Welder : MonoBehaviour
 
     private Weldable FindNearbyWeldable(Vector3 point, Weldable ignore)
     {
-        Collider[] hits = Physics.OverlapSphere(point, searchRadius);
+        Collider[] hits = Physics.OverlapSphere(point, currentElectrode.searchRadius);
         foreach (var col in hits)
         {
             if (col.transform == ignore.transform || col.isTrigger) continue;
