@@ -225,7 +225,7 @@ GameObject:
   - component: {fileID: 2856066704949400218}
   - component: {fileID: 4008247710174682811}
   - component: {fileID: 8782996345695380864}
-  - component: {fileID: 6263541441995015265}
+  - component: {fileID: 6271937719353226893}
   m_Layer: 0
   m_Name: GroundClamp
   m_TagString: Untagged
@@ -350,7 +350,19 @@ MonoBehaviour:
       m_Calls: []
   m_SelectEntered:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6271937719353226893}
+        m_TargetAssemblyTypeName: GroundClamp, Assembly-CSharp
+        m_MethodName: Detach
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_SelectExited:
     m_PersistentCalls:
       m_Calls: []
@@ -369,25 +381,10 @@ MonoBehaviour:
   m_Activated:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Welder, Assembly-CSharp
-        m_MethodName: SetActivated
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  m_Deactivated:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Welder, Assembly-CSharp
-        m_MethodName: SetActivated
-        m_Mode: 6
+      - m_Target: {fileID: 6271937719353226893}
+        m_TargetAssemblyTypeName: GroundClamp, Assembly-CSharp
+        m_MethodName: TryAttach
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -396,6 +393,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  m_Deactivated:
+    m_PersistentCalls:
+      m_Calls: []
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
   m_StartingInteractionStrengthFilters: []
@@ -465,7 +465,7 @@ MonoBehaviour:
   m_LimitAngularVelocity: 0
   m_MaxLinearVelocityDelta: 10
   m_MaxAngularVelocityDelta: 20
---- !u!114 &6263541441995015265
+--- !u!114 &6271937719353226893
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -474,12 +474,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 3184406974574032130}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e73c1579850c5a74e8464d66f60f7a08, type: 3}
+  m_Script: {fileID: 11500000, guid: 4369d10c4f5ecde47936c26802086cfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GroundClamp
-  _attachRadius: 0.03
-  _contactPoint: {fileID: 2251284716261349903}
-  _rb: {fileID: 4008247710174682811}
+  contactPoint: {fileID: 2251284716261349903}
+  contactRadius: 0.03
+  isAttached: 0
 --- !u!1 &3448442330152194196
 GameObject:
   m_ObjectHideFlags: 0

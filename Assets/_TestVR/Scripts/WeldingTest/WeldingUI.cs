@@ -5,18 +5,10 @@ using UnityEngine.UI;
 
 public class WeldingUI : MonoBehaviour
 {
-    public WeldingSettings settings;
-
-    // public Slider currentSlider;
-    // public Slider voltageSlider;
-
     [SerializeField] private List<PPEToggle> _toggles;
 
     private void Start()
     {
-        // currentSlider.onValueChanged.AddListener(v => settings.current = v);
-        // voltageSlider.onValueChanged.AddListener(v => settings.voltage = v);
-
         InteractionManager.Instance.OnObjectUsed += HandleObjectUsed;
     }
 

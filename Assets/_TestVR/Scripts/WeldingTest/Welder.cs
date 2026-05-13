@@ -6,6 +6,7 @@ public class Welder : MonoBehaviour
     public ElectrodeSocket socket;
 
     [Header("Настройки сварки")]
+    public WeldingMachineManager weldingMachineManager;
     public WeldingSettings settings;
     public WeldProcessModel process = new WeldProcessModel();
 
@@ -45,7 +46,7 @@ public class Welder : MonoBehaviour
 
     private void Update()
     {
-        if (!isActivated || settings == null) return;
+        if (!PrepareToWeld()) return;
 
         Electrode electrode = socket?.AttachedElectrode;
         if (electrode == null)
@@ -193,5 +194,13 @@ public class Welder : MonoBehaviour
             if (w != null) return w;
         }
         return null;
+    }
+
+    private bool PrepareToWeld()
+    {
+        if (!isActivated || settings == null) return false;
+        if (!weldingMachineManager.isMachineReady) return false;
+
+        return true;
     }
 }

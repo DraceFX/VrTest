@@ -7,6 +7,7 @@ TagManager:
   - Camera1
   - TestObject
   - PPE
+  - Cable
   layers:
   - Default
   - TransparentFX
