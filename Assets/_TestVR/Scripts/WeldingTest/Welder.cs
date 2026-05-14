@@ -3,44 +3,41 @@ using UnityEngine;
 public class Welder : MonoBehaviour
 {
     [Header("Сокет держателя")]
-    public ElectrodeSocket socket;
+    [SerializeField] private ElectrodeSocket _socket;
 
     [Header("Настройки сварки")]
-    public WeldingMachineManager weldingMachineManager;
-    public WeldingSettings settings;
-    public WeldProcessModel process = new WeldProcessModel();
+    [SerializeField] private WeldingMachineManager _weldingMachineManager;
+    [SerializeField] private WeldingSettings _settings;
+    [SerializeField] private WeldProcessModel _process = new WeldProcessModel();
 
     [Header("Генератор меша шва (префаб)")]
-    public GameObject weldMeshPrefab;
+    [SerializeField] private GameObject _weldMeshPrefab;
 
-    [Header("Градиент температуры")]
-    public Gradient temperatureGradient;
+    [SerializeField] private bool _debugMode = true;
 
-    [SerializeField] private bool debugMode = true;
+    private bool _isActivated = false;
+    private bool _isAssemblyCreated = false;
+    private bool _effectsPlaying = false;
 
-    private bool isActivated = false;
-    private bool isAssemblyCreated = false;
-    private bool effectsPlaying = false;
+    private Weldable _targetA;
+    private Weldable _targetB;
 
-    private Weldable targetA;
-    private Weldable targetB;
-
-    private WeldAssembly currentAssembly;
-    private WeldMeshBuilder activeBuilder;
+    private WeldAssembly _currentAssembly;
+    private WeldMeshBuilder _activeBuilder;
 
     // Текущий активный электрод и флаг эффектов
-    private Electrode currentElectrode;
+    private Electrode _currentElectrode;
 
     public void SetActivated(bool state)
     {
-        isActivated = state;
+        _isActivated = state;
 
         // При отжатии кнопки сразу останавливаем эффекты и сбрасываем контакт
         if (!state)
         {
             StopEffectsIfNeeded();
-            targetA = null;
-            targetB = null;
+            _targetA = null;
+            _targetB = null;
         }
     }
 
@@ -48,36 +45,36 @@ public class Welder : MonoBehaviour
     {
         if (!PrepareToWeld()) return;
 
-        Electrode electrode = socket?.AttachedElectrode;
+        Electrode electrode = _socket?.AttachedElectrode;
         if (electrode == null)
         {
             // Электрод отсутствует — выключаем эффекты
             StopEffectsIfNeeded();
-            currentElectrode = null;
+            _currentElectrode = null;
             return;
         }
 
         // Обновили электрод — если сменился, переносим управление эффектами
-        if (currentElectrode != electrode)
+        if (_currentElectrode != electrode)
         {
             StopEffectsIfNeeded();      // остановить на старом
-            currentElectrode = electrode;
+            _currentElectrode = electrode;
         }
 
-        float power = settings.Power;
+        float power = _settings.Power;
         bool hasContact = TryWeld(electrode, power);
 
         // Управление эффектами: включаем только при успешном контакте, иначе выключаем
         if (hasContact)
         {
-            if (!effectsPlaying)
+            if (!_effectsPlaying)
             {
-                currentElectrode?.StartWeldEffects(power, process.optimalPower);
+                _currentElectrode?.StartWeldEffects(power, _process.OptimalPower);
                 HandleElectrode(electrode, power);
-                effectsPlaying = true;
+                _effectsPlaying = true;
             }
             // Обновляем интенсивность эффектов в реальном времени
-            currentElectrode?.UpdateWeldEffects(power);
+            _currentElectrode?.UpdateWeldEffects(power);
         }
         else
         {
@@ -87,16 +84,16 @@ public class Welder : MonoBehaviour
 
     private void StopEffectsIfNeeded()
     {
-        if (effectsPlaying && currentElectrode != null)
+        if (_effectsPlaying && _currentElectrode != null)
         {
-            currentElectrode.StopWeldEffects();
-            effectsPlaying = false;
+            _currentElectrode.StopWeldEffects();
+            _effectsPlaying = false;
         }
     }
 
     private void HandleElectrode(Electrode electrode, float power)
     {
-        float melt = process.EvaluateMelt(power) * Time.deltaTime;
+        float melt = _process.EvaluateMelt(power) * Time.deltaTime;
         electrode.Burn(melt);
     }
 
@@ -104,89 +101,201 @@ public class Welder : MonoBehaviour
     private bool TryWeld(Electrode electrode, float power)
     {
         Ray ray = new Ray(electrode.tip.position, electrode.tip.forward);
+
         if (!Physics.Raycast(ray, out RaycastHit hit, electrode.weldDistance))
+        {
             return false;
+        }
 
         Weldable a = hit.collider.GetComponent<Weldable>();
+
         if (a == null) return false;
 
-        if (targetA != a)
+        // Обновление цели
+        if (_targetA != a)
         {
-            targetA = a;
-            targetB = FindNearbyWeldable(hit.point, a);
-            if (debugMode)
-                Debug.Log($"[Welder] Новая цель: A={targetA?.name}, B={targetB?.name}");
-        }
+            _targetA = a;
 
-        if (targetB == null) return false;   // нет второго объекта — сварка невозможна
+            _targetB = FindNearbyWeldable(hit.point, a);
 
-        if (!targetA.IsGrounded || !targetB.IsGrounded)
-        {
-            if (debugMode)
-                Debug.Log($"[Welder] Сварка невозможна: один из объектов не заземлён " +
-                          $"(A заземлён: {targetA.IsGrounded}, B заземлён: {targetB.IsGrounded})");
-            return false;   // контакт не засчитывается
-        }
-
-        // Мгновенное создание узла, если ещё не создан
-        if (!isAssemblyCreated)
-            ExecuteWeld();
-
-        // Создаём/получаем билдер меша шва
-        if (activeBuilder == null)
-        {
-            activeBuilder = InstantiateWeldBuilder(hit.point);
-            if (activeBuilder == null) return false;
-
-            if (isAssemblyCreated && currentAssembly != null)
-                activeBuilder.transform.SetParent(currentAssembly.transform, true);
-            else
+            if (_debugMode)
             {
-                Rigidbody rbA = targetA.GetComponentInParent<Rigidbody>();
-                Transform parent = rbA ? rbA.transform : targetA.transform;
-                activeBuilder.transform.SetParent(parent, true);
+                Debug.Log($"[Welder] Новая цель: " + $"A={_targetA?.name}, " + $"B={_targetB?.name}");
             }
         }
 
-        // Наплавка шва
-        float deposit = process.EvaluateDeposit(power);
-        activeBuilder.spacing = Mathf.Lerp(0.006f, 0.002f, Mathf.Clamp01(deposit * 50f));
-        activeBuilder.AddBead(hit.point, hit.normal);
+        // Второй детали нет
+        if (_targetB == null)
+            return false;
 
-        // Дефекты
-        float overheat = Mathf.Clamp01((power - process.optimalPower) / process.optimalPower);
-        if (Random.value < overheat * 0.15f)
-            activeBuilder.AddPore(hit.point + hit.normal * 0.0002f, Random.Range(0.0003f, 0.0008f));
-        if (process.IsBurning(power))
-            activeBuilder.AddBurn(hit.point, hit.normal);
+        // Проверка заземления
+        if (!_targetA.IsGrounded || !_targetB.IsGrounded)
+        {
+            if (_debugMode)
+            {
+                Debug.Log("[Welder] Сварка невозможна: " + "объекты не заземлены");
+            }
 
-        return true; // сварка успешно произошла
+            return false;
+        }
+
+        // Создание assembly
+        if (!_isAssemblyCreated)
+            ExecuteWeld();
+
+        // Создание builder
+        if (_activeBuilder == null)
+        {
+            _activeBuilder = InstantiateWeldBuilder(hit.point);
+
+            if (_activeBuilder == null)
+                return false;
+
+            if (_currentAssembly != null)
+            {
+                _activeBuilder.transform.SetParent(_currentAssembly.transform, true);
+            }
+        }
+
+        // =========================================
+        // ОСНОВНАЯ ЛОГИКА СВАРКИ
+        // =========================================
+
+        float deposit = _process.EvaluateDeposit(power);
+
+        _activeBuilder.Spacing = Mathf.Lerp(0.006f, 0.002f, Mathf.Clamp01(deposit * 50f));
+
+        // Основной валик
+        _activeBuilder.AddBead(hit.point, hit.normal);
+
+        // =========================================
+        // ОЦЕНКА КАЧЕСТВА СВАРКИ
+        // =========================================
+
+        float quality = _process.EvaluateQuality(power);
+
+        float defectChance = 1f - quality;
+
+        // =========================================
+        // ПРОЖОГ
+        // =========================================
+
+        if (_process.IsBurning(power))
+        {
+            _activeBuilder.AddBurn(hit.point, hit.normal);
+
+            int spatters = Random.Range(1, 3);
+
+            for (int i = 0; i < spatters; i++)
+            {
+                _activeBuilder.AddSpatter(hit.point, hit.normal);
+            }
+        }
+
+        // =========================================
+        // ПОРЫ
+        // =========================================
+
+        if (Random.value < defectChance * 0.10f)
+        {
+            Vector3 poreOffset = hit.normal * 0.001f;
+
+            _activeBuilder.AddPore(hit.point + poreOffset, hit.normal);
+        }
+
+        // =========================================
+        // БУСИНКИ / РАЗБРЫЗГИВАНИЕ
+        // =========================================
+
+        if (Random.value < defectChance * 0.12f)
+        {
+            _activeBuilder.AddSpatter(hit.point, hit.normal);
+
+            // Иногда дополнительная капля
+            if (Random.value < 0.25f)
+            {
+                _activeBuilder.AddSpatter(hit.point, hit.normal);
+            }
+        }
+
+        // =========================================
+        // НЕДОГРЕВ
+        // =========================================
+
+        bool underpowered = power < _process.OptimalPower * 0.75f;
+
+        if (underpowered)
+        {
+            // Прерывистый шов
+            if (Random.value < 0.3f)
+            {
+                return true;
+            }
+
+            // Дополнительные капли
+            if (Random.value < 0.5f)
+            {
+                _activeBuilder.AddSpatter(hit.point, hit.normal);
+            }
+        }
+
+        // =========================================
+        // НЕСТАБИЛЬНАЯ ДУГА
+        // =========================================
+
+        float arcDistance = Vector3.Distance(electrode.tip.position, hit.point);
+
+        bool unstableArc = arcDistance > electrode.weldDistance * 0.8f;
+
+        if (unstableArc)
+        {
+            int extraSpatter = Random.Range(2, 6);
+
+            for (int i = 0; i < extraSpatter; i++)
+            {
+                _activeBuilder.AddSpatter(hit.point, hit.normal);
+            }
+
+            // Иногда пропускаем валик
+            if (Random.value < 0.25f)
+            {
+                return true;
+            }
+        }
+
+        return true;
     }
 
     private void ExecuteWeld()
     {
-        if (isAssemblyCreated) return;
-        isAssemblyCreated = true;
-        if (debugMode) Debug.Log($"[Welder] Мгновенное создание узла: {targetA.name} + {targetB.name}");
+        if (_isAssemblyCreated) return;
+        _isAssemblyCreated = true;
+        if (_debugMode) Debug.Log($"[Welder] Мгновенное создание узла: {_targetA.name} + {_targetB.name}");
 
-        currentAssembly = WeldAssembly.Create(targetA, targetB, Vector3.zero);
+        _currentAssembly = WeldAssembly.Create(_targetA, _targetB, Vector3.zero);
 
-        if (activeBuilder != null)
-            activeBuilder.transform.SetParent(currentAssembly.transform, true);
+        if (_activeBuilder != null)
+            _activeBuilder.transform.SetParent(_currentAssembly.transform, true);
     }
 
     private WeldMeshBuilder InstantiateWeldBuilder(Vector3 point)
     {
-        GameObject go = Instantiate(weldMeshPrefab, point, Quaternion.identity);
-        var builder = go.GetComponent<WeldMeshBuilder>();
-        if (builder == null) { Destroy(go); return null; }
-        builder.temperatureGradient = temperatureGradient ?? new Gradient();
+        GameObject go = Instantiate(_weldMeshPrefab, point, Quaternion.identity);
+
+        WeldMeshBuilder builder = go.GetComponent<WeldMeshBuilder>();
+
+        if (builder == null)
+        {
+            Destroy(go);
+            return null;
+        }
+
         return builder;
     }
 
     private Weldable FindNearbyWeldable(Vector3 point, Weldable ignore)
     {
-        Collider[] hits = Physics.OverlapSphere(point, currentElectrode.searchRadius);
+        Collider[] hits = Physics.OverlapSphere(point, _currentElectrode.searchRadius);
         foreach (var col in hits)
         {
             if (col.transform == ignore.transform || col.isTrigger) continue;
@@ -198,8 +307,8 @@ public class Welder : MonoBehaviour
 
     private bool PrepareToWeld()
     {
-        if (!isActivated || settings == null) return false;
-        if (!weldingMachineManager.isMachineReady) return false;
+        if (!_isActivated || _settings == null) return false;
+        if (!_weldingMachineManager.isMachineReady) return false;
 
         return true;
     }

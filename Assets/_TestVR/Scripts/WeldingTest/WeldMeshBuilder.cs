@@ -1,245 +1,241 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class WeldMeshBuilder : MonoBehaviour
 {
-    [Header("Параметры бусинок")]
-    public float width = 0.008f;
-    public float height = 0.004f;
-    public float length = 0.012f;
-    public float spacing = 0.005f;
+    [Header("Prefabs")]
+    [SerializeField] private GameObject _weldBeadPrefab;
+    [SerializeField] private GameObject _porePrefab;
+    [SerializeField] private GameObject _burnPrefab;
+    [SerializeField] private GameObject _spatterPrefab;
 
-    [Header("Остывание")]
-    public Gradient temperatureGradient;
-    public float coolingTime = 3f;
+    [Header("Weld Settings")]
+    public float Spacing = 0.004f;
 
-    // Внутренние списки
-    private List<BeadData> beads = new List<BeadData>();
-    private List<PoreData> pores = new List<PoreData>();
-    private List<BurnData> burns = new List<BurnData>();
+    [Header("Combine")]
+    [SerializeField] private bool _combineOnFinish = true;
 
-    private Mesh mesh;
-    private List<Vector3> vertices = new List<Vector3>();
-    private List<Color> colors = new List<Color>();
-    private List<int> triangles = new List<int>();
+    private readonly List<MeshFilter> _spawnedMeshes = new();
 
-    private Vector3 lastPoint;
-    private bool hasLastPoint;
+    private Vector3 _previousPoint;
+    private bool _hasPreviousPoint;
 
-    private struct BeadData
-    {
-        public Vector3 position;
-        public Quaternion rotation;
-        public Vector3 scale;
-        public float birthTime;
-    }
-
-    private struct PoreData
-    {
-        public Vector3 position;
-        public float radius;
-    }
-
-    private struct BurnData
-    {
-        public Vector3 position;
-        public Quaternion rotation;
-    }
-
-    void Awake()
-    {
-        mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
-    }
+    // =====================================================
+    // ОСНОВНОЙ ШОВ
+    // =====================================================
 
     public void AddBead(Vector3 worldPoint, Vector3 normal)
     {
-        Vector3 localPoint = transform.InverseTransformPoint(worldPoint);
-        Vector3 localNormal = transform.InverseTransformDirection(normal);
-
-        if (hasLastPoint)
+        if (_hasPreviousPoint)
         {
-            float dist = Vector3.Distance(lastPoint, localPoint);
-            if (dist < spacing) return;
-        }
-        lastPoint = localPoint;
-        hasLastPoint = true;
+            float dist = Vector3.Distance(_previousPoint, worldPoint);
 
-        Vector3 forward = (localPoint - (beads.Count > 0 ? beads[beads.Count - 1].position : localPoint)).normalized;
-        if (forward == Vector3.zero) forward = transform.forward;
-
-        Quaternion rot = Quaternion.LookRotation(forward, localNormal) * Quaternion.AngleAxis(Random.Range(-10f, 10f), Vector3.forward);
-        Vector3 scale = new Vector3(
-            width * Random.Range(0.8f, 1.2f),
-            height * Random.Range(0.8f, 1.2f),
-            length * Random.Range(0.8f, 1.2f)
-        );
-
-        beads.Add(new BeadData
-        {
-            position = localPoint,
-            rotation = rot,
-            scale = scale,
-            birthTime = Time.time
-        });
-
-        RebuildMesh();
-    }
-
-    public void AddPore(Vector3 worldPoint, float radius)
-    {
-        pores.Add(new PoreData
-        {
-            position = transform.InverseTransformPoint(worldPoint),
-            radius = radius
-        });
-        RebuildMesh();
-    }
-
-    public void AddBurn(Vector3 worldPoint, Vector3 normal)
-    {
-        burns.Add(new BurnData
-        {
-            position = transform.InverseTransformPoint(worldPoint),
-            rotation = Quaternion.LookRotation(transform.InverseTransformDirection(normal))
-        });
-        RebuildMesh();
-    }
-
-    private void RebuildMesh()
-    {
-        vertices.Clear();
-        colors.Clear();
-        triangles.Clear();
-
-        foreach (var bead in beads)
-        {
-            AddBox(bead.position, bead.rotation, bead.scale, bead.birthTime);
+            if (dist < Spacing) return;
         }
 
-        foreach (var pore in pores)
+        Vector3 direction = _hasPreviousPoint ? (worldPoint - _previousPoint).normalized : transform.forward;
+
+        if (direction == Vector3.zero)
+            direction = transform.forward;
+
+        Quaternion rotation = Quaternion.LookRotation(direction, normal);
+
+        if (!TryProjectToSurface(worldPoint, normal, out RaycastHit hit))
         {
-            AddSphere(pore.position, pore.radius, Color.black);
+            return;
         }
 
-        foreach (var burn in burns)
-        {
-            AddBurnMark(burn.position, burn.rotation);
-        }
+        GameObject obj = Instantiate(_weldBeadPrefab, hit.point + hit.normal * 0.0003f, rotation, transform);
 
-        mesh.Clear();
-        mesh.SetVertices(vertices);
-        mesh.SetColors(colors);
-        mesh.SetTriangles(triangles, 0);
-        mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
+        float randomScale =
+            Random.Range(0.95f, 1.05f);
+
+        obj.transform.localScale *= randomScale;
+
+        _previousPoint = hit.point;
+        _hasPreviousPoint = true;
+
+        RegisterMesh(obj);
     }
 
-    private void AddBox(Vector3 center, Quaternion rotation, Vector3 scale, float birthTime)
+    // =====================================================
+    // ПРОЖОГ
+    // =====================================================
+
+    public void AddBurn(Vector3 point, Vector3 normal)
     {
-        int startIndex = vertices.Count;
-        Vector3[] corners = new Vector3[8]
+        if (!TryProjectToSurface(point, normal, out RaycastHit hit))
         {
-            new Vector3(-0.5f, -0.5f, -0.5f),
-            new Vector3( 0.5f, -0.5f, -0.5f),
-            new Vector3(-0.5f,  0.5f, -0.5f),
-            new Vector3( 0.5f,  0.5f, -0.5f),
-            new Vector3(-0.5f, -0.5f,  0.5f),
-            new Vector3( 0.5f, -0.5f,  0.5f),
-            new Vector3(-0.5f,  0.5f,  0.5f),
-            new Vector3( 0.5f,  0.5f,  0.5f)
-        };
-
-        for (int i = 0; i < 8; i++)
-        {
-            Vector3 v = rotation * Vector3.Scale(corners[i], scale) + center;
-            vertices.Add(v);
-
-            float age = Time.time - birthTime;
-            float t = Mathf.Clamp01(age / coolingTime);
-            colors.Add(temperatureGradient.Evaluate(1 - t));
+            return;
         }
 
-        int[] boxTri = new int[36] {
-            0,2,1, 2,3,1, // front
-            4,5,6, 5,7,6, // back
-            0,1,4, 1,5,4, // bottom
-            2,6,3, 6,7,3, // top
-            0,4,2, 4,6,2, // left
-            1,3,5, 3,7,5  // right
-        };
+        Quaternion rot = Quaternion.FromToRotation(-Vector3.forward, hit.normal);
 
-        foreach (int tri in boxTri)
-            triangles.Add(startIndex + tri);
+        GameObject obj = Instantiate(_burnPrefab, hit.point + hit.normal * 0.0005f, rot, transform);
+
+        obj.transform.localScale *= Random.Range(0.8f, 1.2f);
+
+        RegisterMesh(obj);
     }
 
-    private void AddSphere(Vector3 center, float radius, Color color)
+    // =====================================================
+    // ПОРЫ
+    // =====================================================
+
+    public void AddPore(Vector3 point, Vector3 normal)
     {
-        // Упрощённая сфера (4 сегмента по вертикали, 8 по горизонтали)
-        int startIndex = vertices.Count;
-        int segments = 4;
-        for (int i = 0; i <= segments; i++)
+        if (!TryProjectToSurface(point, normal, out RaycastHit hit))
         {
-            float vAngle = Mathf.PI * i / segments;
-            float y = Mathf.Cos(vAngle) * radius;
-            float r = Mathf.Sin(vAngle) * radius;
-            int ringVertices = (i == 0 || i == segments) ? 1 : segments * 2;
-            for (int j = 0; j < ringVertices; j++)
+            return;
+        }
+
+        Quaternion rot = Quaternion.LookRotation(hit.normal);
+
+        GameObject obj = Instantiate(_porePrefab, hit.point + hit.normal * 0.0002f, rot, transform);
+
+        obj.transform.localScale *= Random.Range(0.7f, 1.2f);
+
+        RegisterMesh(obj);
+    }
+
+    // =====================================================
+    // БРЫЗГИ / БУСИНКИ
+    // =====================================================
+
+    public void AddSpatter(Vector3 point, Vector3 normal)
+    {
+        Vector3 randomDir = Random.insideUnitSphere;
+
+        Vector3 tangent = Vector3.ProjectOnPlane(randomDir, normal).normalized;
+
+        if (tangent == Vector3.zero)
+            tangent = Vector3.right;
+
+        Vector3 offset = tangent * Random.Range(0.003f, 0.02f);
+
+        Vector3 candidate = point + offset + normal * 0.01f;
+
+        if (!Physics.Raycast(candidate, -normal, out RaycastHit hit, 0.03f))
+        {
+            return;
+        }
+
+        Quaternion rot = Quaternion.LookRotation(tangent, hit.normal);
+
+        GameObject obj = Instantiate(_spatterPrefab, hit.point + hit.normal * 0.0005f, rot, transform);
+
+        obj.transform.localScale *= Random.Range(0.5f, 1.3f);
+
+        RegisterMesh(obj);
+    }
+
+    // =====================================================
+    // SURFACE PROJECTION
+    // =====================================================
+
+    private bool TryProjectToSurface(Vector3 point, Vector3 normal, out RaycastHit hit)
+    {
+        Vector3 start = point + normal * 0.02f;
+
+        return Physics.Raycast(start, -normal, out hit, 0.05f);
+    }
+
+    // =====================================================
+    // REGISTRATION
+    // =====================================================
+
+    private void RegisterMesh(GameObject obj)
+    {
+        MeshFilter mf = obj.GetComponent<MeshFilter>();
+
+        if (mf != null)
+        {
+            _spawnedMeshes.Add(mf);
+        }
+    }
+
+    // =====================================================
+    // COMBINE
+    // =====================================================
+
+    public void CombineAll()
+    {
+        MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
+
+        List<CombineInstance> combine = new List<CombineInstance>();
+
+        Material sharedMaterial = null;
+
+        foreach (MeshFilter mf in meshFilters)
+        {
+            if (mf.transform == transform)
+                continue;
+
+            if (mf.sharedMesh == null)
+                continue;
+
+            MeshRenderer mr = mf.GetComponent<MeshRenderer>();
+
+            if (sharedMaterial == null && mr != null)
             {
-                float hAngle = 2 * Mathf.PI * j / ringVertices;
-                float x = Mathf.Cos(hAngle) * r;
-                float z = Mathf.Sin(hAngle) * r;
-                vertices.Add(center + new Vector3(x, y, z));
-                colors.Add(color);
+                sharedMaterial = mr.sharedMaterial;
             }
+
+            CombineInstance ci = new CombineInstance();
+
+            ci.mesh = mf.sharedMesh;
+
+            ci.transform = transform.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+
+            combine.Add(ci);
         }
-        // Индексы треугольников (пропущено для краткости – в полной версии нужно заполнить triangles)
-        // В реальном проекте используйте готовый генератор сферы или добавьте индексы.
+
+        if (combine.Count == 0)
+            return;
+
+        Mesh combinedMesh = new Mesh();
+
+        combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+        combinedMesh.CombineMeshes(combine.ToArray(), true, true);
+
+        MeshFilter rootMF = GetComponent<MeshFilter>();
+
+        if (rootMF == null)
+            rootMF = gameObject.AddComponent<MeshFilter>();
+
+        MeshRenderer rootMR = GetComponent<MeshRenderer>();
+
+        if (rootMR == null)
+            rootMR = gameObject.AddComponent<MeshRenderer>();
+
+        rootMF.sharedMesh = combinedMesh;
+
+        if (sharedMaterial != null)
+        {
+            rootMR.sharedMaterial = sharedMaterial;
+        }
+
+        // Удаляем только дочерние объекты
+        List<GameObject> toDestroy = new List<GameObject>();
+
+        foreach (Transform child in transform)
+        {
+            toDestroy.Add(child.gameObject);
+        }
+
+        foreach (GameObject obj in toDestroy)
+        {
+            Destroy(obj);
+        }
     }
 
-    private void AddBurnMark(Vector3 center, Quaternion rotation)
-    {
-        int startIndex = vertices.Count;
-        float radius = 0.005f;
-        for (int i = 0; i < 8; i++)
-        {
-            float angle = i * Mathf.PI * 2 / 8;
-            Vector3 localPos = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * radius;
-            vertices.Add(center + rotation * localPos);
-            colors.Add(Color.Lerp(Color.black, new Color(0.2f, 0.1f, 0), 0.5f));
-        }
-        vertices.Add(center);
-        colors.Add(Color.black);
-        int centerIdx = startIndex + 8;
-        for (int i = 0; i < 8; i++)
-        {
-            triangles.Add(centerIdx);
-            triangles.Add(startIndex + i);
-            triangles.Add(startIndex + (i + 1) % 8);
-        }
-    }
+    // =====================================================
+    // RESET
+    // =====================================================
 
-    void Update()
+    public void ResetPath()
     {
-        // Обновление цвета бусинок со временем (без перестройки меша)
-        if (beads.Count == 0) return;
-        bool changed = false;
-        for (int i = 0; i < beads.Count; i++)
-        {
-            float age = Time.time - beads[i].birthTime;
-            float t = Mathf.Clamp01(age / coolingTime);
-            Color color = temperatureGradient.Evaluate(1 - t);
-            int baseIdx = i * 8; // каждая бусинка – 8 вершин
-            for (int v = 0; v < 8; v++)
-            {
-                if (baseIdx + v < colors.Count)
-                {
-                    colors[baseIdx + v] = color;
-                    changed = true;
-                }
-            }
-        }
-        if (changed) mesh.SetColors(colors);
+        _hasPreviousPoint = false;
     }
 }

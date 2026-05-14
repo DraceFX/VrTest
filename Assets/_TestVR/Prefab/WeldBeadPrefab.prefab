@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4439904125716952966}
   - component: {fileID: 4339179137217161079}
   - component: {fileID: 2484531167018687072}
-  - component: {fileID: 8209135569938076330}
+  - component: {fileID: 2657966703519309183}
   m_Layer: 0
-  m_Name: Sphere
+  m_Name: WeldBeadPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,8 +29,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -91,7 +91,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8209135569938076330
+--- !u!114 &2657966703519309183
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,41 +100,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2506402704698800214}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dab9056e004fa874490ee6ac3f851df5, type: 3}
+  m_Script: {fileID: 11500000, guid: 703af40e32214344f9869e887488a537, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldMeshBuilder
-  width: 0.008
-  height: 0.004
-  length: 0.012
-  spacing: 0.005
-  temperatureGradient:
-    serializedVersion: 2
-    key0: {r: 0.4433962, g: 0.4433962, b: 0.4433962, a: 1}
-    key1: {r: 1, g: 0.46672806, b: 0, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  coolingTime: 3
+  m_EditorClassIdentifier: Assembly-CSharp::WeldHeat
+  coolSpeed: 1
