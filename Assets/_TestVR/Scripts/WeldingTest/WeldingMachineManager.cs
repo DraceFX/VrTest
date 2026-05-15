@@ -8,22 +8,22 @@ public class WeldingMachineManager : MonoBehaviour
     [SerializeField] private GameObject _infoCanvas;
 
     [Header("XR Knob")]
-    public XRKnob AmperKnob;
-    public XRKnob VoltageKnob;
+    [SerializeField] private XRKnob _amperKnob;
+    [SerializeField] private XRKnob _voltageKnob;
 
     [Header("Value Range")]
-    public float minAmperValue = 10f;
-    public float maxAmperValue = 300f;
+    public float MminAmperValue = 10f;
+    public float MaxAmperValue = 300f;
 
-    public float minVoltageValue = 10f;
-    public float maxVoltageValue = 40f;
+    public float MinVoltageValue = 10f;
+    public float MaxVoltageValue = 40f;
 
     [Header("Optional")]
-    public TMP_Text TextInfo;
-    public WeldingSettings Amper;
-    public WeldingSettings Voltage;
+    [SerializeField] private TMP_Text _textInfo;
+    [SerializeField] private WeldingSettings _amper;
+    [SerializeField] private WeldingSettings _voltage;
 
-    public bool isMachineReady;
+    public bool IsMachineReady;
 
     private bool _welderConnected = false;
     private bool _groundedClampConnected = false;
@@ -36,22 +36,22 @@ public class WeldingMachineManager : MonoBehaviour
 
     private void Update()
     {
-        if (AmperKnob == null && VoltageKnob == null)
+        if (_amperKnob == null && _voltageKnob == null)
             return;
 
-        float rawAmper = Mathf.Lerp(minAmperValue, maxAmperValue, AmperKnob.value);
-        float rawVoltage = Mathf.Lerp(minVoltageValue, maxVoltageValue, VoltageKnob.value);
+        float rawAmper = Mathf.Lerp(MminAmperValue, MaxAmperValue, _amperKnob.value);
+        float rawVoltage = Mathf.Lerp(MinVoltageValue, MaxVoltageValue, _voltageKnob.value);
 
         int amperRounded = Mathf.RoundToInt(rawAmper);
         int voltageRounded = Mathf.RoundToInt(rawVoltage);
 
-        if (TextInfo != null)
-            TextInfo.text = $"A:{amperRounded} V:{voltageRounded}";
+        if (_textInfo != null)
+            _textInfo.text = $"A:{amperRounded} V:{voltageRounded}";
 
-        if (Amper != null)
-            Amper.OnCurrentChanged(amperRounded);
-        if (Voltage != null)
-            Voltage.OnVoltageChanged(voltageRounded);
+        if (_amper != null)
+            _amper.OnCurrentChanged(amperRounded);
+        if (_voltage != null)
+            _voltage.OnVoltageChanged(voltageRounded);
     }
 
     public void EnableWeldingMachine(bool isEnabled)
@@ -59,7 +59,7 @@ public class WeldingMachineManager : MonoBehaviour
         _infoCanvas.SetActive(isEnabled);
         _machineEnable = isEnabled;
 
-        isMachineReady = ReadyToWelding();
+        IsMachineReady = ReadyToWelding();
     }
 
     private void CablesIsConeccted(InteractableTrigger trigger)

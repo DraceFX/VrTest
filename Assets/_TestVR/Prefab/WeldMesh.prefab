@@ -44,9 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dab9056e004fa874490ee6ac3f851df5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeldMeshBuilder
-  weldBeadPrefab: {fileID: 2506402704698800214, guid: 59cca77fd5f15ca429353b271a8e3b3f, type: 3}
-  porePrefab: {fileID: 7341912137542193986, guid: b1ecf4b26aae8ea4dbce814cd6a746a0, type: 3}
-  burnPrefab: {fileID: 7510974253362579401, guid: b56308464bd04aa429cc8130776eb97c, type: 3}
-  spatterPrefab: {fileID: 5424419616622614772, guid: 5c5b61aeda083404caecbd18f8497bd7, type: 3}
-  spacing: 0.005
-  combineEvery: 25
+  _weldBeadPrefab: {fileID: 2506402704698800214, guid: 59cca77fd5f15ca429353b271a8e3b3f, type: 3}
+  _porePrefab: {fileID: 7341912137542193986, guid: b1ecf4b26aae8ea4dbce814cd6a746a0, type: 3}
+  _burnPrefab: {fileID: 7510974253362579401, guid: b56308464bd04aa429cc8130776eb97c, type: 3}
+  _spatterPrefab: {fileID: 5424419616622614772, guid: 5c5b61aeda083404caecbd18f8497bd7, type: 3}
+  Spacing: 0.004
+  _combineOnFinish: 1

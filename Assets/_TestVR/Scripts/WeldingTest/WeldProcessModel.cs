@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[System.Serializable]
-public class WeldProcessModel
+[CreateAssetMenu(fileName = "WeldingMaterial", menuName = "Welding/Material Settings")]
+public class WeldProcessModel : ScriptableObject
 {
     [Header("Tuning")]
     public float OptimalPower = 2500f;

@@ -3,29 +3,33 @@ using UnityEngine;
 
 public class Weldable : MonoBehaviour
 {
-    [SerializeField] private Rigidbody rb;
-    [SerializeField] private bool isGrounded = false;
+    [SerializeField] private Rigidbody _rb;
+    [SerializeField] private bool _isGrounded = false;
 
-    public bool IsGrounded => isGrounded;
+    [Header("Свойства сварки")]
+    [SerializeField] private WeldProcessModel _processModel;
 
-    private HashSet<Collider> contactedColliders = new HashSet<Collider>();
-    private bool isClamped = false;
+    public bool IsGrounded => _isGrounded;
+    public WeldProcessModel ProcessModel => _processModel;
+
+    private HashSet<Collider> _contactedColliders = new HashSet<Collider>();
+    private bool _isClamped = false;
 
     public Rigidbody Rigidbody
     {
         get
         {
-            if (rb == null)
-                rb = GetComponentInParent<Rigidbody>();
-            return rb;
+            if (_rb == null)
+                _rb = GetComponentInParent<Rigidbody>();
+            return _rb;
         }
     }
 
     private void Awake()
     {
         // Автоматически подхватываем Rigidbody, если он не назначен
-        if (rb == null)
-            rb = GetComponentInParent<Rigidbody>();
+        if (_rb == null)
+            _rb = GetComponentInParent<Rigidbody>();
     }
 
     private void OnEnable() => GroundManager.RegisterWeldable(this);
@@ -33,7 +37,7 @@ public class Weldable : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (contactedColliders.Add(collision.collider))
+        if (_contactedColliders.Add(collision.collider))
         {
             // Появился новый контакт — пересчитываем заземление
             GroundManager.NotifyGroundingChanged();
@@ -42,7 +46,7 @@ public class Weldable : MonoBehaviour
 
     private void OnCollisionExit(Collision collision)
     {
-        if (contactedColliders.Remove(collision.collider))
+        if (_contactedColliders.Remove(collision.collider))
         {
             // Контакт разорвался — снова пересчитываем
             GroundManager.NotifyGroundingChanged();
@@ -51,43 +55,44 @@ public class Weldable : MonoBehaviour
 
     internal void SetGroundedInternal(bool value)
     {
-        isGrounded = value;
+        _isGrounded = value;
     }
 
     public void SetClamped(bool value)
     {
-        if (isClamped == value) return;
-        isClamped = value;
+        if (_isClamped == value) return;
+
+        _isClamped = value;
         GroundManager.NotifyGroundingChanged();
     }
 
     public void RefreshGrounding()
     {
-        if (isClamped)
+        if (_isClamped)
         {
-            isGrounded = true;
+            _isGrounded = true;
             return;
         }
 
-        foreach (var col in contactedColliders)
+        foreach (var col in _contactedColliders)
         {
             if (col == null) continue;
 
             GroundSurface gs = col.GetComponentInParent<GroundSurface>();
             if (gs != null && gs.IsActive)
             {
-                isGrounded = true;
+                _isGrounded = true;
                 return;
             }
 
             Weldable w = col.GetComponentInParent<Weldable>();
-            if (w != null && w.isGrounded)
+            if (w != null && w._isGrounded)
             {
-                isGrounded = true;
+                _isGrounded = true;
                 return;
             }
         }
 
-        isGrounded = false;
+        _isGrounded = false;
     }
 }

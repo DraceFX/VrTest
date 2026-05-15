@@ -3,28 +3,28 @@ using UnityEngine;
 public class GroundClamp : MonoBehaviour
 {
     [Header("Точка контакта")]
-    public Transform contactPoint;
-    public float contactRadius = 0.05f;
+    [SerializeField] private Transform _contactPoint;
+    [SerializeField] private float _contactRadius = 0.05f;
 
     [Header("Состояние")]
-    [SerializeField] private bool isAttached = false;
+    [SerializeField] private bool _isAttached = false;
 
-    private Rigidbody rb;
-    private FixedJoint joint;
-    private Weldable clampedWeldable;   // запоминаем, кого заземлили
+    private Rigidbody _rb;
+    private FixedJoint _joint;
+    private Weldable _clampedWeldable;   // запоминаем, кого заземлили
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        if (rb == null)
+        _rb = GetComponent<Rigidbody>();
+        if (_rb == null)
             Debug.LogError("GroundClamp требует Rigidbody");
     }
 
     public void TryAttach()
     {
-        if (isAttached) return;
+        if (_isAttached) return;
 
-        Collider[] hits = Physics.OverlapSphere(contactPoint.position, contactRadius);
+        Collider[] hits = Physics.OverlapSphere(_contactPoint.position, _contactRadius);
         foreach (var hit in hits)
         {
             Rigidbody hitRb = hit.GetComponentInParent<Rigidbody>();
@@ -39,49 +39,49 @@ public class GroundClamp : MonoBehaviour
     private void AttachTo(Rigidbody targetRb)
     {
         // Физическое соединение
-        joint = gameObject.AddComponent<FixedJoint>();
-        joint.connectedBody = targetRb;
-        joint.autoConfigureConnectedAnchor = true;
+        _joint = gameObject.AddComponent<FixedJoint>();
+        _joint.connectedBody = targetRb;
+        _joint.autoConfigureConnectedAnchor = true;
 
-        rb.isKinematic = true;
-        isAttached = true;
+        _rb.isKinematic = true;
+        _isAttached = true;
 
         // Пытаемся найти Weldable на цели и "заземлить" его
-        clampedWeldable = targetRb.GetComponentInParent<Weldable>();
-        if (clampedWeldable != null)
+        _clampedWeldable = targetRb.GetComponentInParent<Weldable>();
+        if (_clampedWeldable != null)
         {
-            clampedWeldable.SetClamped(true);
+            _clampedWeldable.SetClamped(true);
         }
     }
 
     public void Detach()
     {
-        if (!isAttached) return;
+        if (!_isAttached) return;
 
         // Сначала снимаем заземление с Weldable, если был
-        if (clampedWeldable != null)
+        if (_clampedWeldable != null)
         {
-            clampedWeldable.SetClamped(false);
-            clampedWeldable = null;
+            _clampedWeldable.SetClamped(false);
+            _clampedWeldable = null;
         }
 
         // Убираем физическое соединение
-        if (joint != null)
+        if (_joint != null)
         {
-            Destroy(joint);
-            joint = null;
+            Destroy(_joint);
+            _joint = null;
         }
 
-        rb.isKinematic = false;
-        isAttached = false;
+        _rb.isKinematic = false;
+        _isAttached = false;
     }
 
     private void OnDrawGizmosSelected()
     {
-        if (contactPoint != null)
+        if (_contactPoint != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(contactPoint.position, contactRadius);
+            Gizmos.DrawWireSphere(_contactPoint.position, _contactRadius);
         }
     }
 }

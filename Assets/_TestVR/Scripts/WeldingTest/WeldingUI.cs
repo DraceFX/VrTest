@@ -18,9 +18,12 @@ public class WeldingUI : MonoBehaviour
 
         foreach (var toggle in _toggles)
         {
+            if (toggle == null || toggle.TogglePPE == null || string.IsNullOrEmpty(toggle.Id)) continue;
+
             if (toggle.Id == trigger.Id)
             {
                 toggle.TogglePPE.isOn = true;
+                break;
             }
         }
     }

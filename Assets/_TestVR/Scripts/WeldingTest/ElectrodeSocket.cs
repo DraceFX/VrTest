@@ -53,7 +53,7 @@ public class ElectrodeSocket : MonoBehaviour
         electrode.transform.localRotation = Quaternion.AngleAxis(closestAngle, rotationAxis);
 
         // Отключаем физику
-        electrode.rb.isKinematic = true;
+        electrode.Rb.isKinematic = true;
 
         AttachedElectrode = electrode;
         OnElectrodeAttached?.Invoke(electrode);
@@ -69,7 +69,7 @@ public class ElectrodeSocket : MonoBehaviour
 
         electrode.AttachedSocket = null;
         electrode.transform.SetParent(null);
-        electrode.rb.isKinematic = false;
+        electrode.Rb.isKinematic = false;
 
         AttachedElectrode = null;
         OnElectrodeDetached?.Invoke();

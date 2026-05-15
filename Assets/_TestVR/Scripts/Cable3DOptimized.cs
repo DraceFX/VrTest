@@ -4,154 +4,146 @@ using UnityEngine;
 public class Cable3DOptimized : MonoBehaviour
 {
     [Header("Anchors")]
-    public Transform startPoint;
-    public Transform endPoint;
+    [SerializeField] private Transform _startPoint;
+    [SerializeField] private Transform _endPoint;
 
     [Header("Cable")]
     [Range(4, 128)]
-    public int segmentCount = 32;
+    [SerializeField] private int _segmentCount = 32;
 
-    public float segmentLength = 0.25f;
-    public float cableRadius = 0.05f;
+    [SerializeField] private float _segmentLength = 0.25f;
+    [SerializeField] private float _cableRadius = 0.05f;
 
     [Header("Simulation")]
-    public Vector3 gravity = new Vector3(0, -9.81f, 0);
+    [SerializeField] private Vector3 _gravity = new Vector3(0, -9.81f, 0);
 
     [Range(1, 20)]
-    public int solverIterations = 8;
+    [SerializeField] private int _solverIterations = 8;
 
     [Range(0.9f, 1f)]
-    public float damping = 0.995f;
+    [SerializeField] private float _damping = 0.995f;
 
     [Header("Collision")]
-    public LayerMask collisionMask;
+    [SerializeField] private LayerMask _collisionMask;
 
     [Range(1, 16)]
-    public int collisionIterations = 2;
+    [SerializeField] private int _collisionIterations = 2;
 
-    private LineRenderer lineRenderer;
+    private LineRenderer _lineRenderer;
 
-    private Vector3[] positions;
-    private Vector3[] previousPositions;
+    private Vector3[] _positions;
+    private Vector3[] _previousPositions;
 
-    private Collider[] collisionBuffer = new Collider[8];
+    private Collider[] _collisionBuffer = new Collider[8];
 
-    void Awake()
+    private void Awake()
     {
-        lineRenderer = GetComponent<LineRenderer>();
+        _lineRenderer = GetComponent<LineRenderer>();
 
-        positions = new Vector3[segmentCount];
-        previousPositions = new Vector3[segmentCount];
+        _positions = new Vector3[_segmentCount];
+        _previousPositions = new Vector3[_segmentCount];
 
         GenerateCable();
     }
 
-    void GenerateCable()
+    private void GenerateCable()
     {
-        Vector3 start = startPoint.position;
-        Vector3 end = endPoint.position;
+        Vector3 start = _startPoint.position;
+        Vector3 end = _endPoint.position;
 
-        for (int i = 0; i < segmentCount; i++)
+        for (int i = 0; i < _segmentCount; i++)
         {
-            float t = i / (float)(segmentCount - 1);
+            float t = i / (float)(_segmentCount - 1);
 
             Vector3 pos = Vector3.Lerp(start, end, t);
 
-            positions[i] = pos;
-            previousPositions[i] = pos;
+            _positions[i] = pos;
+            _previousPositions[i] = pos;
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         Simulate();
 
-        for (int i = 0; i < solverIterations; i++)
+        for (int i = 0; i < _solverIterations; i++)
         {
             SolveConstraints();
 
-            if (i < collisionIterations)
+            if (i < _collisionIterations)
             {
                 SolveCollisions();
             }
         }
     }
 
-    void Simulate()
+    private void Simulate()
     {
         float dt = Time.fixedDeltaTime;
-        Vector3 gravityStep = gravity * (dt * dt);
+        Vector3 gravityStep = _gravity * (dt * dt);
 
-        for (int i = 1; i < segmentCount - 1; i++)
+        for (int i = 1; i < _segmentCount - 1; i++)
         {
-            Vector3 current = positions[i];
+            Vector3 current = _positions[i];
 
-            Vector3 velocity = (current - previousPositions[i]) * damping;
+            Vector3 velocity = (current - _previousPositions[i]) * _damping;
 
-            previousPositions[i] = current;
+            _previousPositions[i] = current;
 
-            positions[i] += velocity;
-            positions[i] += gravityStep;
+            _positions[i] += velocity;
+            _positions[i] += gravityStep;
         }
 
-        positions[0] = startPoint.position;
-        positions[segmentCount - 1] = endPoint.position;
+        _positions[0] = _startPoint.position;
+        _positions[_segmentCount - 1] = _endPoint.position;
 
-        previousPositions[0] = startPoint.position;
-        previousPositions[segmentCount - 1] = endPoint.position;
+        _previousPositions[0] = _startPoint.position;
+        _previousPositions[_segmentCount - 1] = _endPoint.position;
     }
 
-    void SolveConstraints()
+    private void SolveConstraints()
     {
-        positions[0] = startPoint.position;
-        positions[segmentCount - 1] = endPoint.position;
+        _positions[0] = _startPoint.position;
+        _positions[_segmentCount - 1] = _endPoint.position;
 
-        for (int i = 0; i < segmentCount - 1; i++)
+        for (int i = 0; i < _segmentCount - 1; i++)
         {
-            Vector3 a = positions[i];
-            Vector3 b = positions[i + 1];
+            Vector3 a = _positions[i];
+            Vector3 b = _positions[i + 1];
 
             Vector3 delta = b - a;
 
             float dist = delta.magnitude;
 
-            if (dist <= 0.0001f)
-                continue;
+            if (dist <= 0.0001f) continue;
 
-            float error = dist - segmentLength;
+            float error = dist - _segmentLength;
 
             Vector3 correction = delta / dist * error;
 
             if (i != 0)
-                positions[i] += correction * 0.5f;
+                _positions[i] += correction * 0.5f;
 
-            if (i != segmentCount - 2)
-                positions[i + 1] -= correction * 0.5f;
+            if (i != _segmentCount - 2)
+                _positions[i + 1] -= correction * 0.5f;
         }
     }
 
-    void SolveCollisions()
+    private void SolveCollisions()
     {
-        float radiusSqr = cableRadius * cableRadius;
+        float radiusSqr = _cableRadius * _cableRadius;
 
-        for (int i = 1; i < segmentCount - 1; i++)
+        for (int i = 1; i < _segmentCount - 1; i++)
         {
-            Vector3 point = positions[i];
+            Vector3 point = _positions[i];
 
-            int hitCount = Physics.OverlapSphereNonAlloc(
-                point,
-                cableRadius,
-                collisionBuffer,
-                collisionMask,
-                QueryTriggerInteraction.Ignore
-            );
+            int hitCount = Physics.OverlapSphereNonAlloc(point, _cableRadius, _collisionBuffer, _collisionMask, QueryTriggerInteraction.Ignore);
 
             for (int h = 0; h < hitCount; h++)
             {
-                Collider col = collisionBuffer[h];
+                Collider col = _collisionBuffer[h];
 
                 Vector3 closest = col.ClosestPoint(point);
-
                 Vector3 offset = point - closest;
 
                 float sqrDist = offset.sqrMagnitude;
@@ -172,58 +164,51 @@ public class Cable3DOptimized : MonoBehaviour
                         dist = 0f;
                     }
 
-                    float penetration = cableRadius - dist;
+                    float penetration = _cableRadius - dist;
 
-                    // SOFT CORRECTION
-                    positions[i] += normal * (penetration * 0.8f);
+                    _positions[i] += normal * (penetration * 0.8f);
 
-                    // REMOVE NORMAL VELOCITY
-                    Vector3 velocity =
-                        positions[i] - previousPositions[i];
+                    Vector3 velocity = _positions[i] - _previousPositions[i];
 
-                    float normalVelocity =
-                        Vector3.Dot(velocity, normal);
+                    float normalVelocity = Vector3.Dot(velocity, normal);
 
                     if (normalVelocity < 0f)
                     {
                         velocity -= normal * normalVelocity;
                     }
 
-                    // SURFACE FRICTION
                     velocity *= 0.9f;
 
-                    previousPositions[i] =
-                        positions[i] - velocity;
+                    _previousPositions[i] = _positions[i] - velocity;
                 }
             }
         }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         RenderCable();
     }
 
-    void RenderCable()
+    private void RenderCable()
     {
-        lineRenderer.positionCount = segmentCount;
+        _lineRenderer.positionCount = _segmentCount;
 
-        for (int i = 0; i < segmentCount; i++)
+        for (int i = 0; i < _segmentCount; i++)
         {
-            lineRenderer.SetPosition(i, positions[i]);
+            _lineRenderer.SetPosition(i, _positions[i]);
         }
     }
 
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
-        if (positions == null)
-            return;
+        if (_positions == null) return;
 
         Gizmos.color = Color.yellow;
 
-        for (int i = 0; i < positions.Length; i++)
+        for (int i = 0; i < _positions.Length; i++)
         {
-            Gizmos.DrawSphere(positions[i], cableRadius);
+            Gizmos.DrawSphere(_positions[i], _cableRadius);
         }
     }
 }

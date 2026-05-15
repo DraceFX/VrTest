@@ -4,27 +4,29 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class WeldingMaskController : MonoBehaviour
 {
-    [Header("Углы маски (локальные, по оси X)")]
-    public float upAngle = 0f;      // Поднятое состояние
-    public float downAngle = -85f;  // Опущенное состояние (сварка)
-    public float snapThreshold = -45f; // Порог срабатывания авто-фиксации
-    public float smoothSpeed = 8f;  // Скорость плавного возврата
+    [Header("Углы маски")]
+    [SerializeField] private float _upAngle = 0f;      // Поднятое состояние
+    [SerializeField] private float _downAngle = -85f;  // Опущенное состояние
+    [SerializeField] private float _snapThreshold = -45f; // Порог срабатывания авто-фиксации
+    [SerializeField] private float _smoothSpeed = 8f;  // Скорость плавного возврата
 
-    private XRGrabInteractable grab;
-    private Quaternion upRot, downRot, targetRot;
+    private XRGrabInteractable _grab;
+    private Quaternion _upRot;
+    private Quaternion _downRot;
+    private Quaternion _targetRot;
 
     void Awake()
     {
-        grab = GetComponent<XRGrabInteractable>();
+        _grab = GetComponent<XRGrabInteractable>();
 
-        upRot = Quaternion.Euler(upAngle, 0, 0);
-        downRot = Quaternion.Euler(downAngle, 0, 0);
-        targetRot = upRot;
-        transform.localRotation = upRot;
+        _upRot = Quaternion.Euler(_upAngle, 0, 0);
+        _downRot = Quaternion.Euler(_downAngle, 0, 0);
+        _targetRot = _upRot;
+        transform.localRotation = _upRot;
 
         // Подписываемся на события захвата
-        grab.selectEntered.AddListener(OnGrab);
-        grab.selectExited.AddListener(OnRelease);
+        _grab.selectEntered.AddListener(OnGrab);
+        _grab.selectExited.AddListener(OnRelease);
     }
 
     private void OnGrab(SelectEnterEventArgs e)
@@ -38,21 +40,21 @@ public class WeldingMaskController : MonoBehaviour
         float x = transform.localEulerAngles.x;
         if (x > 180f) x -= 360f; // Нормализуем в диапазон -180..180
 
-        targetRot = x < snapThreshold ? downRot : upRot;
+        _targetRot = x < _snapThreshold ? _downRot : _upRot;
     }
 
     void LateUpdate()
     {
         // Плавный возврат к целевому углу
-        if (!grab.isSelected)
+        if (!_grab.isSelected)
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRot, Time.deltaTime * smoothSpeed);
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, _targetRot, Time.deltaTime * _smoothSpeed);
         }
 
-        // Жёсткое ограничение вращения только по оси X
+        // Жёсткое ограничение вращения
         float x = transform.localEulerAngles.x;
         if (x > 180f) x -= 360f;
-        x = Mathf.Clamp(x, downAngle, upAngle);
+        x = Mathf.Clamp(x, _downAngle, _upAngle);
         transform.localRotation = Quaternion.Euler(x, 0f, 0f);
     }
 }

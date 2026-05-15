@@ -8,7 +8,6 @@ public class Welder : MonoBehaviour
     [Header("Настройки сварки")]
     [SerializeField] private WeldingMachineManager _weldingMachineManager;
     [SerializeField] private WeldingSettings _settings;
-    [SerializeField] private WeldProcessModel _process = new WeldProcessModel();
 
     [Header("Генератор меша шва (префаб)")]
     [SerializeField] private GameObject _weldMeshPrefab;
@@ -41,6 +40,20 @@ public class Welder : MonoBehaviour
         }
     }
 
+    private void FinishWeldSession()
+    {
+        if (_activeBuilder != null)
+        {
+            // Если билдер — временный объект, просто уничтожаем
+            if (Application.isPlaying) Destroy(_activeBuilder.gameObject);
+            else DestroyImmediate(_activeBuilder.gameObject);
+            _activeBuilder = null;
+        }
+
+        _isAssemblyCreated = false;
+        _currentAssembly = null;
+    }
+
     private void Update()
     {
         if (!PrepareToWeld()) return;
@@ -67,9 +80,11 @@ public class Welder : MonoBehaviour
         // Управление эффектами: включаем только при успешном контакте, иначе выключаем
         if (hasContact)
         {
+            WeldProcessModel model = _targetA?.ProcessModel;
+            if (model == null) return;
             if (!_effectsPlaying)
             {
-                _currentElectrode?.StartWeldEffects(power, _process.OptimalPower);
+                _currentElectrode?.StartWeldEffects(power, model.OptimalPower);
                 HandleElectrode(electrode, power);
                 _effectsPlaying = true;
             }
@@ -93,16 +108,19 @@ public class Welder : MonoBehaviour
 
     private void HandleElectrode(Electrode electrode, float power)
     {
-        float melt = _process.EvaluateMelt(power) * Time.deltaTime;
+        WeldProcessModel model = _targetA?.ProcessModel;
+        if (model == null) return;
+
+        float melt = model.EvaluateMelt(power) * Time.deltaTime;
         electrode.Burn(melt);
     }
 
     /// <returns>True если электрод касается свариваемой пары и сварка выполняется</returns>
     private bool TryWeld(Electrode electrode, float power)
     {
-        Ray ray = new Ray(electrode.tip.position, electrode.tip.forward);
+        Ray ray = new Ray(electrode.Tip.position, electrode.Tip.forward);
 
-        if (!Physics.Raycast(ray, out RaycastHit hit, electrode.weldDistance))
+        if (!Physics.Raycast(ray, out RaycastHit hit, electrode.WeldDistance))
         {
             return false;
         }
@@ -127,6 +145,13 @@ public class Welder : MonoBehaviour
         // Второй детали нет
         if (_targetB == null)
             return false;
+
+        WeldProcessModel model = _targetA?.ProcessModel;
+        if (model == null)
+        {
+            Debug.LogWarning("Weldable не содержит WeldProcessModel!");
+            return false;
+        }
 
         // Проверка заземления
         if (!_targetA.IsGrounded || !_targetB.IsGrounded)
@@ -161,7 +186,7 @@ public class Welder : MonoBehaviour
         // ОСНОВНАЯ ЛОГИКА СВАРКИ
         // =========================================
 
-        float deposit = _process.EvaluateDeposit(power);
+        float deposit = model.EvaluateDeposit(power);
 
         _activeBuilder.Spacing = Mathf.Lerp(0.006f, 0.002f, Mathf.Clamp01(deposit * 50f));
 
@@ -172,7 +197,7 @@ public class Welder : MonoBehaviour
         // ОЦЕНКА КАЧЕСТВА СВАРКИ
         // =========================================
 
-        float quality = _process.EvaluateQuality(power);
+        float quality = model.EvaluateQuality(power);
 
         float defectChance = 1f - quality;
 
@@ -180,7 +205,7 @@ public class Welder : MonoBehaviour
         // ПРОЖОГ
         // =========================================
 
-        if (_process.IsBurning(power))
+        if (model.IsBurning(power))
         {
             _activeBuilder.AddBurn(hit.point, hit.normal);
 
@@ -222,7 +247,7 @@ public class Welder : MonoBehaviour
         // НЕДОГРЕВ
         // =========================================
 
-        bool underpowered = power < _process.OptimalPower * 0.75f;
+        bool underpowered = power < model.OptimalPower * 0.75f;
 
         if (underpowered)
         {
@@ -243,9 +268,9 @@ public class Welder : MonoBehaviour
         // НЕСТАБИЛЬНАЯ ДУГА
         // =========================================
 
-        float arcDistance = Vector3.Distance(electrode.tip.position, hit.point);
+        float arcDistance = Vector3.Distance(electrode.Tip.position, hit.point);
 
-        bool unstableArc = arcDistance > electrode.weldDistance * 0.8f;
+        bool unstableArc = arcDistance > electrode.WeldDistance * 0.8f;
 
         if (unstableArc)
         {
@@ -295,7 +320,7 @@ public class Welder : MonoBehaviour
 
     private Weldable FindNearbyWeldable(Vector3 point, Weldable ignore)
     {
-        Collider[] hits = Physics.OverlapSphere(point, _currentElectrode.searchRadius);
+        Collider[] hits = Physics.OverlapSphere(point, _currentElectrode._searchRadius);
         foreach (var col in hits)
         {
             if (col.transform == ignore.transform || col.isTrigger) continue;
@@ -308,7 +333,7 @@ public class Welder : MonoBehaviour
     private bool PrepareToWeld()
     {
         if (!_isActivated || _settings == null) return false;
-        if (!_weldingMachineManager.isMachineReady) return false;
+        if (!_weldingMachineManager.IsMachineReady) return false;
 
         return true;
     }
