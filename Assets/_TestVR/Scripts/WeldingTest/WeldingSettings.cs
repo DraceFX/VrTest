@@ -14,13 +14,13 @@ public class WeldingSettings : MonoBehaviour
 
     public void OnCurrentChanged(float current)
     {
-        Debug.Log("Вольт: " + current);
+        // Debug.Log("Вольт: " + current);
         this.current = current;
     }
 
     public void OnVoltageChanged(float voltage)
     {
-        Debug.Log("Вольт: " + voltage);
+        // Debug.Log("Вольт: " + voltage);
         this.voltage = voltage;
     }
 }

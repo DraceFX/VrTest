@@ -12,6 +12,10 @@ public class Welder : MonoBehaviour
     [Header("Генератор меша шва (префаб)")]
     [SerializeField] private GameObject _weldMeshPrefab;
 
+    [Header("Оценка траектории")]
+    [SerializeField] private WeldTrajectoryEvaluator _trajectoryEvaluator;
+    [SerializeField] private WeldQualityAssessor _qualityAssessor;
+
     [SerializeField] private bool _debugMode = true;
 
     private bool _isActivated = false;
@@ -35,23 +39,20 @@ public class Welder : MonoBehaviour
         if (!state)
         {
             StopEffectsIfNeeded();
+
+            if (_qualityAssessor != null)
+            {
+                _qualityAssessor.StopAssessment();
+                float finalQuality = _qualityAssessor.OverallQuality;
+                Debug.Log($"Шов завершён. Качество: {finalQuality * 100:F1}%");
+            }
+
+            if (_trajectoryEvaluator != null)
+                _trajectoryEvaluator.Reset();
+
             _targetA = null;
             _targetB = null;
         }
-    }
-
-    private void FinishWeldSession()
-    {
-        if (_activeBuilder != null)
-        {
-            // Если билдер — временный объект, просто уничтожаем
-            if (Application.isPlaying) Destroy(_activeBuilder.gameObject);
-            else DestroyImmediate(_activeBuilder.gameObject);
-            _activeBuilder = null;
-        }
-
-        _isAssemblyCreated = false;
-        _currentAssembly = null;
     }
 
     private void Update()
@@ -76,6 +77,9 @@ public class Welder : MonoBehaviour
 
         float power = _settings.Power;
         bool hasContact = TryWeld(electrode, power);
+
+        if (_isActivated && _trajectoryEvaluator != null)
+            _trajectoryEvaluator.UpdateTracking(electrode.Tip.position);
 
         // Управление эффектами: включаем только при успешном контакте, иначе выключаем
         if (hasContact)
@@ -166,7 +170,14 @@ public class Welder : MonoBehaviour
 
         // Создание assembly
         if (!_isAssemblyCreated)
+        {
             ExecuteWeld();
+
+            Vector3 forwardOnSurface = Vector3.ProjectOnPlane(electrode.Tip.forward, hit.normal).normalized;
+            _trajectoryEvaluator.Initialize(hit.point, hit.normal, forwardOnSurface);
+            _qualityAssessor.StartAssessment();
+        }
+
 
         // Создание builder
         if (_activeBuilder == null)
@@ -197,9 +208,16 @@ public class Welder : MonoBehaviour
         // ОЦЕНКА КАЧЕСТВА СВАРКИ
         // =========================================
 
-        float quality = model.EvaluateQuality(power);
+        float powerQuality = model.EvaluateQuality(power);
+        float trajectoryFactor = _trajectoryEvaluator != null ? _trajectoryEvaluator.TrajectoryQuality : 1f;
+        float finalQuality = powerQuality * trajectoryFactor;
 
-        float defectChance = 1f - quality;
+        float arcDist = Vector3.Distance(electrode.Tip.position, hit.point);
+        float idealArc = electrode.WeldDistance * 0.7f; // пример номинала
+        float currentWidth = _activeBuilder.Spacing; // можно брать из _activeBuilder.Spacing или трекера
+        _qualityAssessor.UpdateAssessment(power, model.OptimalPower, electrode.Tip.position, arcDist, idealArc, currentWidth);
+
+        float defectChance = 1f - finalQuality;
 
         // =========================================
         // ПРОЖОГ
@@ -208,6 +226,7 @@ public class Welder : MonoBehaviour
         if (model.IsBurning(power))
         {
             _activeBuilder.AddBurn(hit.point, hit.normal);
+            _qualityAssessor.RegisterDefect();
 
             int spatters = Random.Range(1, 3);
 
@@ -226,6 +245,7 @@ public class Welder : MonoBehaviour
             Vector3 poreOffset = hit.normal * 0.001f;
 
             _activeBuilder.AddPore(hit.point + poreOffset, hit.normal);
+            _qualityAssessor.RegisterDefect();
         }
 
         // =========================================
@@ -235,6 +255,7 @@ public class Welder : MonoBehaviour
         if (Random.value < defectChance * 0.12f)
         {
             _activeBuilder.AddSpatter(hit.point, hit.normal);
+            _qualityAssessor.RegisterDefect();
 
             // Иногда дополнительная капля
             if (Random.value < 0.25f)
@@ -261,6 +282,7 @@ public class Welder : MonoBehaviour
             if (Random.value < 0.5f)
             {
                 _activeBuilder.AddSpatter(hit.point, hit.normal);
+                _qualityAssessor.RegisterDefect();
             }
         }
 
@@ -279,6 +301,7 @@ public class Welder : MonoBehaviour
             for (int i = 0; i < extraSpatter; i++)
             {
                 _activeBuilder.AddSpatter(hit.point, hit.normal);
+                _qualityAssessor.RegisterDefect();
             }
 
             // Иногда пропускаем валик
