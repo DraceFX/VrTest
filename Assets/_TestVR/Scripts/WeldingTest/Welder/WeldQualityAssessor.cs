@@ -11,9 +11,7 @@ public class WeldQualityAssessor : MonoBehaviour
     [SerializeField] private float _weightWidthUniformity = 0.15f;
     [SerializeField] private float _weightDefects = 0.20f;
 
-    // Ссылки на внешние компоненты
     [SerializeField] private WeldTrajectoryEvaluator _trajectoryEvaluator;
-    [SerializeField] private Welder _welder;  // для доступа к power, electrode.Tip.position и т.д.
 
     // Накопленные данные
     private List<float> _widthSamples = new List<float>();

@@ -39,7 +39,7 @@ public class WeldSessionManager : MonoBehaviour
             _qualityAssessor.StartAssessment();
     }
 
-    /// <summary>Завершить текущий шов и сбросить состояние.</summary>
+    // Завершить текущий шов и сбросить состояние
     public void FinishWeld()
     {
         if (_qualityAssessor != null)

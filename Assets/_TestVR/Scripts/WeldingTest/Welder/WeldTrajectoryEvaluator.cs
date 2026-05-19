@@ -31,13 +31,8 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
     private Vector3 _smoothedPosition;    // сглаженная позиция электрода
     private Vector3 _velocityRef;         // для SmoothDamp
 
-    /// <summary>Публичное качество траектории (читается из Welder).</summary>
     public float TrajectoryQuality => _currentQuality;
 
-    /// <summary>
-    /// Инициализация из первого контакта — вызывается при старте сварки.
-    /// Передаётся точка касания и нормаль, чтобы задать систему координат шва.
-    /// </summary>
     public void Initialize(Vector3 contactPoint, Vector3 contactNormal, Vector3 weldForward)
     {
         _seamOrigin = contactPoint;
@@ -48,9 +43,7 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
         _smoothedPosition = contactPoint;
     }
 
-    /// <summary>
-    /// Вызывается каждый кадр, пока сварка активна.
-    /// </summary>
+    // Вызывается каждый кадр, пока сварка активна.
     public void UpdateTracking(Vector3 electrodeTipPosition)
     {
         if (!_isInitialized) return;
@@ -114,18 +107,14 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
             case WeldPattern.Herringbone:
                 // Ёлочка: пилообразная волна с резкими переходами
                 float phase = (s * _weaveFrequency) % 1f;
-                if (phase < 0.5f)
-                    return _weaveAmplitude * (4f * phase - 1f);
-                else
-                    return _weaveAmplitude * (3f - 4f * phase);
-            default:
-                return 0f;
+                if (phase < 0.5f) return _weaveAmplitude * (4f * phase - 1f);
+                else return _weaveAmplitude * (3f - 4f * phase);
+
+            default: return 0f;
         }
     }
 
-    /// <summary>
-    /// Сброс перед новым швом.
-    /// </summary>
+    //Сброс перед новым швом.
     public void Reset()
     {
         _isInitialized = false;
