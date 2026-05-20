@@ -110,11 +110,6 @@ public class WeldQualityAssessor : MonoBehaviour
         }
         else WidthUniformityScore = 1f;
 
-        // Дефекты: штраф за количество на единицу длины (нужна длина шва)
-        // float weldLength = ...; // можно взять из трекера (s)
-        // float defectsPerMeter = weldLength > 0 ? _defectCount / weldLength : 0;
-        // DefectScore = Mathf.Clamp01(1f - defectsPerMeter * 10f);
-
         // Итоговая средневзвешенная
         OverallQuality = TrajectoryScore * _weightTrajectory
                        + HeatInputScore * _weightHeatInput

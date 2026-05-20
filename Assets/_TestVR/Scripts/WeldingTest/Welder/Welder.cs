@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class Welder : MonoBehaviour
 {
@@ -16,10 +18,46 @@ public class Welder : MonoBehaviour
     [SerializeField] private WeldTrajectoryEvaluator _trajectoryEvaluator;
     [SerializeField] private WeldQualityAssessor _qualityAssessor;
 
+    [SerializeField] private bool _needPressTrigger = true;
+
     private bool _isActivated;
+    private XRGrabInteractable _xrGrab;
+
+    private void Awake()
+    {
+        _xrGrab = GetComponent<XRGrabInteractable>();
+
+        _xrGrab.activated.AddListener(OnActivated);
+        _xrGrab.deactivated.AddListener(OnDeactivated);
+
+        if (!_needPressTrigger)
+            _isActivated = true;
+    }
+
+    private void OnDestroy()
+    {
+        // Отписка от событий
+        if (_xrGrab != null)
+        {
+            _xrGrab.activated.RemoveListener(OnActivated);
+            _xrGrab.deactivated.RemoveListener(OnDeactivated);
+        }
+    }
+
+    private void OnActivated(ActivateEventArgs args)
+    {
+        SetActivated(true);
+    }
+
+    private void OnDeactivated(DeactivateEventArgs args)
+    {
+        SetActivated(false);
+    }
 
     public void SetActivated(bool state)
     {
+        if (!_needPressTrigger) return;
+
         _isActivated = state;
         if (!state)
         {

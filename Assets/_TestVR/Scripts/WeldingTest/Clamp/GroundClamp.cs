@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class GroundClamp : MonoBehaviour
 {
@@ -12,12 +14,33 @@ public class GroundClamp : MonoBehaviour
     private Rigidbody _rb;
     private FixedJoint _joint;
     private Weldable _clampedWeldable;   // запоминаем, кого заземлили
+    private XRGrabInteractable _xrGrab;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
         if (_rb == null)
             Debug.LogError("GroundClamp требует Rigidbody");
+
+        _xrGrab = GetComponent<XRGrabInteractable>();
+
+        _xrGrab.activated.AddListener(OnActivated);
+    }
+
+    private void OnDestroy()
+    {
+        if (_xrGrab != null)
+        {
+            _xrGrab.activated.RemoveListener(OnActivated);
+        }
+    }
+
+    private void OnActivated(ActivateEventArgs args)
+    {
+        if (_isAttached)
+            Detach();
+        else
+            TryAttach();
     }
 
     public void TryAttach()
@@ -43,7 +66,7 @@ public class GroundClamp : MonoBehaviour
         _joint.connectedBody = targetRb;
         _joint.autoConfigureConnectedAnchor = true;
 
-        _rb.isKinematic = true;
+        // _rb.isKinematic = true;
         _isAttached = true;
 
         // Пытаемся найти Weldable на цели и "заземлить" его
@@ -72,7 +95,7 @@ public class GroundClamp : MonoBehaviour
             _joint = null;
         }
 
-        _rb.isKinematic = false;
+        // _rb.isKinematic = false;
         _isAttached = false;
     }
 

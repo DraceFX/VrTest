@@ -99,4 +99,13 @@ public class Electrode : MonoBehaviour
         _currentPower = power;
         _effect.UpdateEffects(_currentPower, _optimalPower);
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (Tip != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(Tip.position, _searchRadius);
+        }
+    }
 }

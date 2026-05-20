@@ -15,7 +15,7 @@ public class WeldingMaskController : MonoBehaviour
     private Quaternion _downRot;
     private Quaternion _targetRot;
 
-    void Awake()
+    private void Awake()
     {
         _grab = GetComponent<XRGrabInteractable>();
 
@@ -43,7 +43,7 @@ public class WeldingMaskController : MonoBehaviour
         _targetRot = x < _snapThreshold ? _downRot : _upRot;
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         // Плавный возврат к целевому углу
         if (!_grab.isSelected)

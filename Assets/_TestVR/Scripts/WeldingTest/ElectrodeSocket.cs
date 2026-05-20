@@ -16,7 +16,7 @@ public class ElectrodeSocket : MonoBehaviour
     public System.Action<Electrode> OnElectrodeAttached;
     public System.Action OnElectrodeDetached;
 
-    /// Пытается прикрепить электрод к держателю.
+    // Пытается прикрепить электрод к держателю.
     public void TryAttachElectrode(Electrode electrode)
     {
         if (AttachedElectrode != null)
@@ -75,7 +75,7 @@ public class ElectrodeSocket : MonoBehaviour
         OnElectrodeDetached?.Invoke();
     }
 
-    /// <summary>Извлекает угол поворота вокруг заданной оси из кватерниона.</summary>
+    //Извлекает угол поворота вокруг заданной оси из кватерниона
     private float GetAngleAroundAxis(Quaternion rotation, Vector3 axis)
     {
         // Для простоты работаем через углы Эйлера, если ось — одна из стандартных
