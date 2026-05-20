@@ -23,7 +23,7 @@ public class WeldContactDetector : MonoBehaviour
         if (TargetA != a)
         {
             TargetA = a;
-            TargetB = FindNearbyWeldable(hit.point, a, electrode._searchRadius);
+            TargetB = FindNearbyWeldable(hit.point, a, electrode.SearchRadius);
             if (_debugMode)
                 Debug.Log($"[WeldContact] Новая цель: A={TargetA?.name}, B={TargetB?.name}");
         }

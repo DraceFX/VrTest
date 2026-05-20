@@ -16,6 +16,8 @@ public class GroundClamp : MonoBehaviour
     private Weldable _clampedWeldable;   // запоминаем, кого заземлили
     private XRGrabInteractable _xrGrab;
 
+    public bool IsAttached => _isAttached;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
@@ -33,6 +35,11 @@ public class GroundClamp : MonoBehaviour
         {
             _xrGrab.activated.RemoveListener(OnActivated);
         }
+    }
+
+    private void OnJointBreak(float breakForce)
+    {
+        Detach();
     }
 
     private void OnActivated(ActivateEventArgs args)
@@ -65,8 +72,10 @@ public class GroundClamp : MonoBehaviour
         _joint = gameObject.AddComponent<FixedJoint>();
         _joint.connectedBody = targetRb;
         _joint.autoConfigureConnectedAnchor = true;
+        _joint.breakForce = 5000f; // Настройте под свой проект
+        _joint.breakTorque = 1000f;
+        _joint.enableCollision = false;
 
-        // _rb.isKinematic = true;
         _isAttached = true;
 
         // Пытаемся найти Weldable на цели и "заземлить" его
@@ -95,7 +104,6 @@ public class GroundClamp : MonoBehaviour
             _joint = null;
         }
 
-        // _rb.isKinematic = false;
         _isAttached = false;
     }
 

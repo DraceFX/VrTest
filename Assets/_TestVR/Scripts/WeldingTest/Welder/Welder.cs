@@ -131,6 +131,7 @@ public class Welder : MonoBehaviour
 
     private bool PrepareToWeld()
     {
-        return _isActivated && _settings != null && _weldingMachineManager.IsMachineReady;
+        if (_isActivated && _weldingMachineManager.IsMachineReady) return true;
+        return false;
     }
 }

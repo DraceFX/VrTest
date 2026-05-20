@@ -79,7 +79,7 @@ public class WeldingMachineManager : MonoBehaviour
 
     private bool ReadyToWelding()
     {
-        if (!_welderConnected && !_groundedClampConnected && !_machineEnable) return false;
+        if (!_welderConnected || !_groundedClampConnected || !_machineEnable) return false;
         return true;
     }
 }

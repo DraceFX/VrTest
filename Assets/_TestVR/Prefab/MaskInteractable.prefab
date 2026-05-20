@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2619101669858532241}
   - component: {fileID: 5015022614624725322}
   - component: {fileID: 2356890622259056477}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: MaskInteractable
   m_TagString: PPE
   m_Icon: {fileID: 0}
@@ -51,7 +51,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -99,7 +99,7 @@ MonoBehaviour:
   m_InteractionManager: {fileID: 0}
   m_Colliders: []
   m_InteractionLayers:
-    m_Bits: 2
+    m_Bits: 9
   m_DistanceCalculationMode: 1
   m_SelectMode: 0
   m_FocusMode: 1
@@ -249,7 +249,7 @@ GameObject:
   - component: {fileID: 2726572889933522359}
   - component: {fileID: 8052663611870351056}
   - component: {fileID: 8153031640302616474}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: Mask
   m_TagString: PPE
   m_Icon: {fileID: 0}
@@ -340,7 +340,7 @@ GameObject:
   - component: {fileID: 2353330180452295668}
   - component: {fileID: 4210831112437897749}
   - component: {fileID: 6872785589495532815}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: Glass
   m_TagString: PPE
   m_Icon: {fileID: 0}
