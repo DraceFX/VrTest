@@ -703,7 +703,7 @@ RectTransform:
   m_GameObject: {fileID: 478804656}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 2.5}
-  m_LocalScale: {x: 0.005, y: 0.005, z: 0.005}
+  m_LocalScale: {x: 0.002, y: 0.002, z: 0.002}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2035608188}
@@ -712,7 +712,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 1.75}
-  m_SizeDelta: {x: 600, y: 256}
+  m_SizeDelta: {x: 1024, y: 512}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &478804658
 MonoBehaviour:
@@ -818,50 +818,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!1 &481841325
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 481841326}
-  - component: {fileID: 481841327}
-  m_Layer: 0
-  m_Name: WeldElectrodeConsumer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &481841326
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 481841325}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &481841327
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 481841325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5b385f81f7da574db0985f25aa20ea4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldElectrodeConsumer
 --- !u!1 &496802158
 GameObject:
   m_ObjectHideFlags: 0
@@ -2338,50 +2294,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.2, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &953652819
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 953652820}
-  - component: {fileID: 953652821}
-  m_Layer: 0
-  m_Name: WeldEffectController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &953652820
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 953652819}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &953652821
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 953652819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d58e3aa4db56794d98120632584be93, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldEffectController
 --- !u!1 &977433885
 GameObject:
   m_ObjectHideFlags: 0
@@ -2754,56 +2666,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1049800815}
   m_CullTransparentMesh: 1
---- !u!1 &1053299761
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1053299762}
-  - component: {fileID: 1053299763}
-  m_Layer: 0
-  m_Name: WeldProfileVisualizer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1053299762
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053299761}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.51353, y: -0.45073998, z: 0.9}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1053299763
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053299761}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4232bd053769bea478e4ff4ef4999ebb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldProfileVisualizer
-  targetRawImage: {fileID: 2035608190}
-  realProfileColor: {r: 0, g: 0, b: 1, a: 1}
-  idealProfileColor: {r: 0, g: 1, b: 0, a: 1}
-  textureWidth: 256
-  textureHeight: 256
-  marginPixels: 20
 --- !u!1 &1083756338
 GameObject:
   m_ObjectHideFlags: 0
@@ -2958,96 +2820,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1087077154}
   m_CullTransparentMesh: 1
---- !u!1 &1107977492
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1107977493}
-  - component: {fileID: 1107977494}
-  m_Layer: 0
-  m_Name: WeldContactDetector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1107977493
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1107977492}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1107977494
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1107977492}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f699ddae97795743ba50919da4a7e0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldContactDetector
-  _debugMode: 1
---- !u!1 &1132709190
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1132709191}
-  - component: {fileID: 1132709192}
-  m_Layer: 0
-  m_Name: WeldDefectEngine
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1132709191
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1132709190}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1132709192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1132709190}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c607775d60410409eaa8f043883a24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldDefectEngine
-  _qualityAssessor: {fileID: 2145809010}
 --- !u!1 &1148244306
 GameObject:
   m_ObjectHideFlags: 0
@@ -3127,55 +2899,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1148244306}
   m_CullTransparentMesh: 1
---- !u!1 &1149804562
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1149804564}
-  - component: {fileID: 1149804563}
-  m_Layer: 0
-  m_Name: WeldSessionManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1149804563
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1149804562}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca083a8fbab00364faf9dff6bb1e68f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldSessionManager
-  _weldMeshPrefab: {fileID: 2506402704698800214, guid: 14f480a215c4b494d98134a7c4b1dec8, type: 3}
-  _trajectoryEvaluator: {fileID: 1656356487}
-  _qualityAssessor: {fileID: 2145809010}
-  _profileVisualizer: {fileID: 1053299763}
-  _debugMode: 1
---- !u!4 &1149804564
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1149804562}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1158044162
 GameObject:
   m_ObjectHideFlags: 0
@@ -4001,11 +3724,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1489551731 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3611296211925588345, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-  m_PrefabInstance: {fileID: 1771166224262031629}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1494614775
 GameObject:
   m_ObjectHideFlags: 0
@@ -4520,56 +4238,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1568844278}
   m_CullTransparentMesh: 1
---- !u!1 &1656356486
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1656356488}
-  - component: {fileID: 1656356487}
-  m_Layer: 0
-  m_Name: WeldTrajectoryEvaluator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1656356487
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1656356486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ffaadde44fe1ee24694a721228c783fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldTrajectoryEvaluator
-  _pattern: 1
-  _weaveAmplitude: 0.01
-  _weaveFrequency: 25
-  _maxLateralError: 0.002
-  _qualityDecayRate: 2
-  _smoothTime: 0.05
---- !u!4 &1656356488
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1656356486}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1683971677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5621,7 +5289,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 256, y: 256}
+  m_SizeDelta: {x: 1024, y: 512}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &2035608189
 CanvasRenderer:
@@ -5809,56 +5477,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099908427}
   m_CullTransparentMesh: 1
---- !u!1 &2145809009
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2145809011}
-  - component: {fileID: 2145809010}
-  m_Layer: 0
-  m_Name: WeldQualityAssessor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2145809010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2145809009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0bff53b39faac414eaa67c0f1b480682, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeldQualityAssessor
-  _weightTrajectory: 0.25
-  _weightHeatInput: 0.25
-  _weightArcStability: 0.15
-  _weightWidthUniformity: 0.15
-  _weightDefects: 0.2
-  _trajectoryEvaluator: {fileID: 1656356487}
---- !u!4 &2145809011
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2145809009}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1771166224262031631}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &740408192709956600
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6045,82 +5663,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 238893991371369178, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _attachPoint
-      value: 
-      objectReference: {fileID: 1489551731}
-    - target: {fileID: 238893991371369178, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: '_fixedAngles.Array.data[2]'
-      value: -90
-      objectReference: {fileID: 0}
-    - target: {fileID: 238893991371369178, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: '_fixedAngles.Array.data[3]'
-      value: -45
-      objectReference: {fileID: 0}
-    - target: {fileID: 1705252844660639505, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_Activated.m_PersistentCalls.m_Calls.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1705252844660639505, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_Deactivated.m_PersistentCalls.m_Calls.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _tracker
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _debugMode
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _defectEngine
-      value: 
-      objectReference: {fileID: 1132709192}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _fillEvaluator
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _sessionManager
-      value: 
-      objectReference: {fileID: 1149804563}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _contactDetector
-      value: 
-      objectReference: {fileID: 1107977494}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _patternDetector
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _qualityAssessor
-      value: 
-      objectReference: {fileID: 2145809010}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _effectController
-      value: 
-      objectReference: {fileID: 953652821}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _needPressTrigger
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _patternEvaluator
-      value: 
-      objectReference: {fileID: 1656356487}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _qualityEvaluator
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _electrodeConsumer
-      value: 
-      objectReference: {fileID: 481841327}
-    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: _trajectoryEvaluator
-      value: 
-      objectReference: {fileID: 1656356487}
     - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
       propertyPath: _weldingMachineManager
       value: 
@@ -6169,59 +5711,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
+    - target: {fileID: 7378529311405566340, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
+      propertyPath: textureWidth
+      value: 1024
       objectReference: {fileID: 0}
-    - target: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
+    - target: {fileID: 7378529311405566340, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
+      propertyPath: targetRawImage
+      value: 
+      objectReference: {fileID: 2035608190}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1053299762}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1656356488}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2145809011}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1107977493}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1132709191}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 953652820}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 481841326}
-    - targetCorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1149804564}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
 --- !u!4 &1771166224262031630 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3940032844752965542, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
-  m_PrefabInstance: {fileID: 1771166224262031629}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1771166224262031631 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4575171539844582688, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
   m_PrefabInstance: {fileID: 1771166224262031629}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1783901723533367896

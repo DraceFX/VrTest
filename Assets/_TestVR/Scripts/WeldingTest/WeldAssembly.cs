@@ -1,9 +1,25 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class WeldAssembly : MonoBehaviour
 {
-    public static WeldAssembly Create(Weldable a, Weldable b, Vector3 weldPoint)
+    [Header("Настройки прочности шва")]
+    [SerializeField] private float _fullQualityBreakForce = 10000f;   // при 100% качестве
+    [SerializeField] private float _fullQualityBreakTorque = 10000f; // при 100% качестве
+
+
+    private FixedJoint _joint;
+    private Rigidbody _connectedBody; // для отслеживания
+    private List<GameObject> _weldMeshObjects = new List<GameObject>();  // все меши между этой парой
+    private float _totalQuality = 0f;
+    private bool _isDestroyed = false;
+
+    public bool IsBroken => _joint == null;
+    public float CurrentBreakForce => _joint != null ? _joint.breakForce : 0f;
+    public float CurrentBreakTorque => _joint != null ? _joint.breakTorque : 0f;
+
+    public static WeldAssembly Create(Weldable a, Weldable b, float quality, GameObject weldMeshObject = null)
     {
         if (a == null || b == null)
         {
@@ -11,58 +27,77 @@ public class WeldAssembly : MonoBehaviour
             return null;
         }
 
-        // Получаем Rigidbody родителей
         Rigidbody rbA = a.GetComponentInParent<Rigidbody>();
         Rigidbody rbB = b.GetComponentInParent<Rigidbody>();
 
-        // --- 1. СНАЧАЛА удаляем зависимые XRGrabInteractable с самих объектов A и B ---
-        XRGrabInteractable grabA = a.GetComponent<XRGrabInteractable>();
-        XRGrabInteractable grabB = b.GetComponent<XRGrabInteractable>();
-        if (grabA != null) Destroy(grabA);
-        if (grabB != null) Destroy(grabB);
-
-        // --- 2. Теперь замораживаем физику ---
-        if (rbA != null) rbA.isKinematic = true;
-        if (rbB != null) rbB.isKinematic = true;
-
-        // --- 3. Создаём общий родительский объект ---
-        GameObject assemblyGO = new GameObject("WeldedAssembly");
-        assemblyGO.transform.position = (a.transform.position + b.transform.position) * 0.5f;
-        assemblyGO.transform.rotation = Quaternion.identity;
-
-        Rigidbody assemblyRb = assemblyGO.AddComponent<Rigidbody>();
-        float massA = rbA ? rbA.mass : 1f;
-        float massB = rbB ? rbB.mass : 1f;
-        assemblyRb.mass = massA + massB;
-        assemblyRb.useGravity = true;
-        assemblyRb.isKinematic = false;
-        assemblyRb.linearVelocity = Vector3.zero;
-        assemblyRb.angularVelocity = Vector3.zero;
-
-        // --- 4. Переносим A и B как дети ---
-        a.transform.SetParent(assemblyGO.transform, true);
-        b.transform.SetParent(assemblyGO.transform, true);
-
-        // --- 5. Удаляем старые Rigidbody (Grab'ов уже нет) ---
-        if (rbA != null) Destroy(rbA);
-        if (rbB != null) Destroy(rbB);
-
-        // --- 6. Подчищаем оставшиеся Grab'ы у детей (на всякий случай) ---
-        foreach (var grab in assemblyGO.GetComponentsInChildren<XRGrabInteractable>())
+        if (rbA == null || rbB == null)
         {
-            if (grab.gameObject != assemblyGO)
-                Destroy(grab);
+            Debug.LogError("[WeldAssembly] Оба объекта должны иметь Rigidbody!");
+            return null;
         }
 
-        // --- 7. Добавляем общий XRGrabInteractable на сборку ---
-        var assemblyGrab = assemblyGO.AddComponent<XRGrabInteractable>();
-        assemblyGrab.movementType = XRBaseInteractable.MovementType.VelocityTracking;
-        assemblyGrab.throwOnDetach = false;
+        WeldAssembly existing = null;
+        foreach (var assemble in rbA.GetComponents<WeldAssembly>())
+        {
+            if (assemble._connectedBody == rbB)
+            {
+                existing = assemble;
+                break;
+            }
+        }
 
-        assemblyGO.layer = a.gameObject.layer;
-        var weldAssembly = assemblyGO.AddComponent<WeldAssembly>();
+        if (existing != null)
+        {
+            // Добавляем качество к существующему соединению
+            float newTotalQuality = Mathf.Min(1f, existing._totalQuality + quality);
+            existing._totalQuality = newTotalQuality;
 
-        Debug.Log($"[WeldAssembly] Создана сборка из {a.name} и {b.name}");
-        return weldAssembly;
+            // Обновляем прочность джойнта
+            existing._joint.breakForce = newTotalQuality * existing._fullQualityBreakForce;
+            existing._joint.breakTorque = newTotalQuality * existing._fullQualityBreakTorque;
+
+            // Добавляем новый меш в список
+            if (weldMeshObject != null)
+                existing._weldMeshObjects.Add(weldMeshObject);
+
+            Debug.Log($"[WeldAssembly] Существующее соединение обновлено: {a.name} ↔ {b.name}, суммарное качество: {newTotalQuality:P0}, breakForce={existing._joint.breakForce}");
+            return existing;
+        }
+
+        // Создаём новое соединение
+        FixedJoint joint = rbA.gameObject.AddComponent<FixedJoint>();
+        joint.connectedBody = rbB;
+        joint.enableCollision = false;
+        joint.breakForce = quality * 10000f;   // начальная прочность
+        joint.breakTorque = quality * 10000f;
+
+        WeldAssembly assembly = rbA.gameObject.AddComponent<WeldAssembly>();
+        assembly._joint = joint;
+        assembly._connectedBody = rbB;
+        assembly._totalQuality = quality;
+        if (weldMeshObject != null)
+            assembly._weldMeshObjects.Add(weldMeshObject);
+
+        Debug.Log($"[WeldAssembly] Создано новое соединение: {a.name} ↔ {b.name}, качество: {quality:P0}, breakForce={joint.breakForce}");
+        return assembly;
+    }
+
+    private void OnJointBreak(float breakForce)
+    {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        Debug.Log($"[WeldAssembly] Сварной шов разрушен! Приложенная сила: {breakForce}");
+
+        // Удаляем все связанные меши
+        foreach (var mesh in _weldMeshObjects)
+        {
+            if (mesh != null) Destroy(mesh);
+        }
+        _weldMeshObjects.Clear();
+
+        // Убираем джойнт и компонент
+        if (_joint != null) Destroy(_joint);
+        Destroy(this);
     }
 }

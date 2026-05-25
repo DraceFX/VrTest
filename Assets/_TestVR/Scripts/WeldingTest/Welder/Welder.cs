@@ -27,11 +27,15 @@ public class Welder : MonoBehaviour
     {
         _xrGrab = GetComponent<XRGrabInteractable>();
 
-        _xrGrab.activated.AddListener(OnActivated);
-        _xrGrab.deactivated.AddListener(OnDeactivated);
-
-        if (!_needPressTrigger)
+        if (_needPressTrigger)
+        {
+            _xrGrab.activated.AddListener(OnActivated);
+            _xrGrab.deactivated.AddListener(OnDeactivated);
+        }
+        else
+        {
             _isActivated = true;
+        }
     }
 
     private void OnDestroy()
@@ -56,14 +60,10 @@ public class Welder : MonoBehaviour
 
     public void SetActivated(bool state)
     {
-        if (!_needPressTrigger) return;
-
         _isActivated = state;
         if (!state)
         {
-            _effectController.StopEffects();
-            _sessionManager.FinishWeld();
-            _contactDetector.ResetTargets();
+            StopWeld();
         }
     }
 
@@ -91,7 +91,7 @@ public class Welder : MonoBehaviour
             if (model == null) return;
 
             // Старт сессии, если ещё не начата
-            if (!_sessionManager.IsAssemblyCreated)
+            if (!_sessionManager.IsSessionActive)
             {
                 Vector3 forwardOnSurface = Vector3.ProjectOnPlane(electrode.Tip.forward, hit.normal).normalized;
                 _sessionManager.StartNewWeld(_contactDetector.TargetA, _contactDetector.TargetB, hit.point, hit.normal, forwardOnSurface);
@@ -102,7 +102,6 @@ public class Welder : MonoBehaviour
 
             // Параметры наплавки
             float deposit = model.EvaluateDeposit(power);
-
             builder.Spacing = Mathf.Lerp(0.006f, 0.002f, Mathf.Clamp01(deposit * 50f));
             builder.AddBead(hit.point, hit.normal);
 
@@ -125,8 +124,23 @@ public class Welder : MonoBehaviour
         }
         else
         {
-            _effectController.StopEffects();
+            if (_sessionManager.IsSessionActive)
+            {
+                StopWeld();
+            }
+            else
+            {
+                // Даже если сессии нет, просто остановим эффекты
+                _effectController.StopEffects();
+            }
         }
+    }
+
+    private void StopWeld()
+    {
+        _effectController.StopEffects();
+        _sessionManager.FinishWeld();
+        _contactDetector.ResetTargets();
     }
 
     private bool PrepareToWeld()

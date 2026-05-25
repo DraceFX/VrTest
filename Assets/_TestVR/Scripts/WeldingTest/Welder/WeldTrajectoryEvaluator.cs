@@ -28,7 +28,6 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
 
     [Tooltip("Частота циклов на метр")]
     [SerializeField] private float _weaveFrequency = 2f;
-
     [SerializeField] private float _maxLateralError = 0.002f;
 
     [Header("Настройки оценки")]
@@ -40,6 +39,9 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
     private Vector3 _seamDirection;
     private Vector3 _seamNormal;
     private bool _isInitialized = false;
+
+    private bool _directionChecked = false;   // была ли проверка направления
+    private const int DIR_CHECK_FRAMES = 20;   // через сколько точек проверять
 
     private float _currentQuality = 1f;
     private Vector3 _smoothedPosition;
@@ -71,6 +73,24 @@ public class WeldTrajectoryEvaluator : MonoBehaviour
         if (!_isInitialized) return;
 
         _smoothedPosition = Vector3.SmoothDamp(_smoothedPosition, electrodeTipPosition, ref _velocityRef, _smoothTime);
+
+        // Проверка фактического направления (один раз в начале)
+        if (!_directionChecked && _realProfilePoints.Count >= DIR_CHECK_FRAMES)
+        {
+            _directionChecked = true;
+            Vector3 currentDir = (_smoothedPosition - _seamOrigin).normalized;
+            float dot = Vector3.Dot(currentDir, _seamDirection);
+
+            // Если движение идёт преимущественно в обратную сторону
+            if (dot < -0.5f)
+            {
+                _seamDirection = -_seamDirection;          // инвертируем ось
+                // Сбрасываем накопленные точки и начинаем заново с верным направлением
+                _realProfilePoints.Clear();
+                _realProfilePoints.Add(Vector2.zero);
+                // Текущая позиция станет первой после сброса – она будет учтена ниже
+            }
+        }
 
         Vector3 toPoint = _smoothedPosition - _seamOrigin;
         // Продольная координата вдоль шва
