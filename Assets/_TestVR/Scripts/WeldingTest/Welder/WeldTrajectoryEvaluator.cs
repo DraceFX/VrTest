@@ -1,123 +1,279 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum WeldPattern
 {
-    Straight,       // без колебаний
-    Zigzag,         // треугольная волна
-    Circle,         // круговые петли
-    Herringbone     // ёлочка
+    Straight,
+    Zigzag,
+    Triangle,
+    Circle,
+    Herringbone,
+    Figure8,      // восьмёрка
+    CShape,       // полумесяц
+    Spiral,
+    Sawtooth,
+    Square,
+    Wave,
+    DoubleWave
 }
 
 public class WeldTrajectoryEvaluator : MonoBehaviour
 {
     [Header("Параметры идеального шва")]
     [SerializeField] private WeldPattern _pattern = WeldPattern.Straight;
-    [SerializeField] private float _weaveAmplitude = 0.003f;   // амплитуда узора, м
-    [SerializeField] private float _weaveFrequency = 2f;       // циклов на метр
-    [SerializeField] private float _maxLateralError = 0.002f;  // допустимое отклонение, м
+
+    [Tooltip("Амплитуда колебаний (м)")]
+    [SerializeField] private float _weaveAmplitude = 0.003f;
+
+    [Tooltip("Частота циклов на метр")]
+    [SerializeField] private float _weaveFrequency = 2f;
+
+    [SerializeField] private float _maxLateralError = 0.002f;
 
     [Header("Настройки оценки")]
-    [SerializeField] private float _qualityDecayRate = 2f;     // скорость падения качества при ошибке
-    [SerializeField] private float _smoothTime = 0.05f;        // сглаживание для фильтрации дрожания
+    [SerializeField] private float _qualityDecayRate = 2f;
+    [SerializeField] private float _smoothTime = 0.05f;
 
     // Внутреннее состояние
-    private Vector3 _seamOrigin;          // точка начала шва (мировая)
-    private Vector3 _seamDirection;       // направление шва (единичный вектор)
-    private Vector3 _seamNormal;          // нормаль к поверхности (для бокового смещения)
+    private Vector3 _seamOrigin;
+    private Vector3 _seamDirection;
+    private Vector3 _seamNormal;
     private bool _isInitialized = false;
 
-    private float _currentQuality = 1f;   // текущее качество траектории (0..1)
-    private Vector3 _smoothedPosition;    // сглаженная позиция электрода
-    private Vector3 _velocityRef;         // для SmoothDamp
+    private float _currentQuality = 1f;
+    private Vector3 _smoothedPosition;
+    private Vector3 _velocityRef;
+
+    private List<Vector2> _realProfilePoints = new List<Vector2>();
 
     public float TrajectoryQuality => _currentQuality;
+    public float WeaveAmplitude => _weaveAmplitude;
+    public float WeaveFrequency => _weaveFrequency;
+    public WeldPattern CurrentPattern => _pattern;
 
     public void Initialize(Vector3 contactPoint, Vector3 contactNormal, Vector3 weldForward)
     {
         _seamOrigin = contactPoint;
         _seamDirection = weldForward.normalized;
         _seamNormal = contactNormal.normalized;
+
         _isInitialized = true;
         _currentQuality = 1f;
         _smoothedPosition = contactPoint;
+
+        _realProfilePoints.Clear();
+        _realProfilePoints.Add(Vector2.zero);
     }
 
-    // Вызывается каждый кадр, пока сварка активна.
     public void UpdateTracking(Vector3 electrodeTipPosition)
     {
         if (!_isInitialized) return;
 
-        // Сглаживание для подавления XR-дрожания
         _smoothedPosition = Vector3.SmoothDamp(_smoothedPosition, electrodeTipPosition, ref _velocityRef, _smoothTime);
 
-        // Проецируем сглаженную позицию на ось шва: находим s
         Vector3 toPoint = _smoothedPosition - _seamOrigin;
+        // Продольная координата вдоль шва
         float s = Vector3.Dot(toPoint, _seamDirection);
+        // Центральная точка шва
         Vector3 basePoint = _seamOrigin + s * _seamDirection;
-
-        // Боковой вектор (перпендикуляр к направлению шва и нормали)
+        // Боковая ось
         Vector3 lateral = Vector3.Cross(_seamNormal, _seamDirection).normalized;
-
-        // Идеальное поперечное смещение в зависимости от узора
+        // Идеальное смещение
         float idealOffset = ComputeIdealOffset(s);
         Vector3 idealPoint = basePoint + idealOffset * lateral;
-
-        // Фактическая позиция электрода
-        Vector3 realPoint = _smoothedPosition;
-
-        // Ошибка — расстояние между реальной точкой и идеальной (или только поперечная компонента)
-        Vector3 errorVec = realPoint - idealPoint;
-        // Можно оставить полное расстояние, но чаще важна боковая ошибка:
+        // Ошибка
+        Vector3 errorVec = _smoothedPosition - idealPoint;
         float lateralError = Vector3.Dot(errorVec, lateral);
+        // Реальная траектория
+        float realLateral = Vector3.Dot(toPoint, lateral);
+        _realProfilePoints.Add(new Vector2(s, realLateral));
 
-        // Абсолютное отклонение (можно использовать модуль боковой ошибки)
+        // Оценка качества
         float absError = Mathf.Abs(lateralError);
 
-        // Превышение допустимого порога
         if (absError > _maxLateralError)
         {
-            // Снижаем качество пропорционально превышению (с накоплением)
             float excess = (absError - _maxLateralError) / _maxLateralError;
+
             _currentQuality -= excess * _qualityDecayRate * Time.deltaTime;
         }
         else
         {
-            // Медленное восстановление качества, если всё хорошо (опционально)
             _currentQuality += 0.1f * Time.deltaTime;
         }
 
         _currentQuality = Mathf.Clamp01(_currentQuality);
     }
 
-    private float ComputeIdealOffset(float s)
+    /// <summary>
+    /// Возвращает боковое смещение электрода
+    /// относительно центральной оси шва.
+    /// </summary>
+    public float ComputeIdealOffset(float s)
     {
+        // Нормализованная фаза
+        float phase = s * _weaveFrequency;
+        float omega = phase * Mathf.PI * 2f;
+
         switch (_pattern)
         {
+            // ----------------------------------------------------
+            // Прямая
+            // ----------------------------------------------------
             case WeldPattern.Straight:
                 return 0f;
+
+            // ----------------------------------------------------
+            // Синус
+            // ----------------------------------------------------
+            case WeldPattern.Wave:
+            case WeldPattern.Circle: return _weaveAmplitude * Mathf.Sin(omega);
+
+            // ----------------------------------------------------
+            // Двойная волна
+            // ----------------------------------------------------
+            case WeldPattern.DoubleWave: return _weaveAmplitude * Mathf.Sin(omega) * Mathf.Cos(omega * 0.5f);
+
+            // ----------------------------------------------------
+            // Зигзаг
+            // ----------------------------------------------------
             case WeldPattern.Zigzag:
-                // Треугольная волна: используем (s * freq) % 1
-                float t = (s * _weaveFrequency) % 1f;
-                // Смещение линейно от -A до +A
-                return _weaveAmplitude * (2f * t - 1f);
-            case WeldPattern.Circle:
-                // Синус для плавных круговых движений
-                return _weaveAmplitude * Mathf.Sin(s * _weaveFrequency * 2f * Mathf.PI);
+                {
+                    float t = Mathf.PingPong(phase, 1f);
+                    return Mathf.Lerp(-_weaveAmplitude, _weaveAmplitude, t);
+                }
+
+            // ----------------------------------------------------
+            // Треугольник
+            // ----------------------------------------------------
+            case WeldPattern.Triangle:
+                {
+                    float t = phase % 1f;
+
+                    if (t < 0.5f) return Mathf.Lerp(-_weaveAmplitude, _weaveAmplitude, t * 2f);
+
+                    return Mathf.Lerp(_weaveAmplitude, -_weaveAmplitude, (t - 0.5f) * 2f);
+                }
+
+            // ----------------------------------------------------
+            // Пилообразный
+            // ----------------------------------------------------
+            case WeldPattern.Sawtooth:
+                {
+                    float t = phase % 1f;
+                    return Mathf.Lerp(-_weaveAmplitude, _weaveAmplitude, t);
+                }
+
+            // ----------------------------------------------------
+            // Меандр / квадрат
+            // ----------------------------------------------------
+            case WeldPattern.Square:
+                {
+                    return Mathf.Sign(Mathf.Sin(omega)) * _weaveAmplitude;
+                }
+
+            // ----------------------------------------------------
+            // Ёлочка
+            // ----------------------------------------------------
             case WeldPattern.Herringbone:
-                // Ёлочка: пилообразная волна с резкими переходами
-                float phase = (s * _weaveFrequency) % 1f;
-                if (phase < 0.5f) return _weaveAmplitude * (4f * phase - 1f);
-                else return _weaveAmplitude * (3f - 4f * phase);
+                {
+                    float t = phase % 1f;
+
+                    if (t < 0.5f) return _weaveAmplitude * (4f * t - 1f);
+
+                    return _weaveAmplitude * (3f - 4f * t);
+                }
+
+            // ----------------------------------------------------
+            // Восьмёрка
+            // x = sin(t)
+            // y = sin(2t)
+            // В lateral берём y
+            // ----------------------------------------------------
+            case WeldPattern.Figure8:
+                {
+                    return _weaveAmplitude * Mathf.Sin(2f * omega);
+                }
+
+            // ----------------------------------------------------
+            // Полумесяц / C-shape
+            // ----------------------------------------------------
+            case WeldPattern.CShape:
+                {
+                    float c = Mathf.Cos(omega);
+
+                    // только одна сторона
+                    return _weaveAmplitude * Mathf.Clamp(c, -0.2f, 1f);
+                }
+
+            // ----------------------------------------------------
+            // Спираль
+            // ----------------------------------------------------
+            case WeldPattern.Spiral:
+                {
+                    float growth = 0.5f + 0.5f * Mathf.Sin(omega * 0.25f);
+
+                    return _weaveAmplitude * growth * Mathf.Sin(omega);
+                }
 
             default: return 0f;
         }
     }
 
-    //Сброс перед новым швом.
+    /// <summary>
+    /// Полная 2D траектория.
+    /// Используется если нужен не только lateral offset,
+    /// а полноценная фигура в плоскости.
+    /// </summary>
+    public Vector2 ComputePattern2D(float s)
+    {
+        float phase = s * _weaveFrequency;
+        float omega = phase * Mathf.PI * 2f;
+
+        switch (_pattern)
+        {
+            case WeldPattern.Circle:
+                {
+                    return new Vector2(Mathf.Cos(omega), Mathf.Sin(omega)) * _weaveAmplitude;
+                }
+
+            case WeldPattern.Figure8:
+                {
+                    // Лиссажу
+                    return new Vector2(Mathf.Sin(omega), Mathf.Sin(2f * omega)) * _weaveAmplitude;
+                }
+
+            case WeldPattern.Spiral:
+                {
+                    float r = _weaveAmplitude * (0.5f + 0.5f * Mathf.Sin(omega * 0.2f));
+
+                    return new Vector2(Mathf.Cos(omega), Mathf.Sin(omega)) * r;
+                }
+
+            case WeldPattern.CShape:
+                {
+                    float a = Mathf.Lerp(-Mathf.PI * 0.75f, Mathf.PI * 0.75f, (Mathf.Sin(omega) + 1f) * 0.5f);
+
+                    return new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * _weaveAmplitude;
+                }
+
+            default:
+                {
+                    return new Vector2(s, ComputeIdealOffset(s));
+                }
+        }
+    }
+
+    public IReadOnlyList<Vector2> GetRecordedProfile()
+    {
+        return _realProfilePoints;
+    }
+
     public void Reset()
     {
         _isInitialized = false;
         _currentQuality = 1f;
+        _realProfilePoints.Clear();
     }
 }

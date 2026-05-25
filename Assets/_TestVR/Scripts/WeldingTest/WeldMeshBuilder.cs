@@ -16,44 +16,77 @@ public class WeldMeshBuilder : MonoBehaviour
     [SerializeField] private bool _combineOnFinish = true;
 
     private readonly List<MeshFilter> _spawnedMeshes = new();
-
     private Vector3 _previousPoint;
     private bool _hasPreviousPoint;
+    private List<BeadPoint> _beadPoints = new();   // точки шва с нормалями
+    private Vector3 _seamNormal;
+    private Vector3 _seamDirection;
+    private float _totalLength;
+
+    public float SeamLength => _totalLength;
+    public float ActualLength
+    {
+        get
+        {
+            if (_beadPoints.Count < 2) return 0f;
+            return Vector3.Distance(_beadPoints[0].position, _beadPoints[_beadPoints.Count - 1].position);
+        }
+    }
+
+    public IReadOnlyList<BeadPoint> BeadPoints => _beadPoints;
+
+    public Vector3 GetFirstBeadPosition() => _beadPoints.Count > 0 ? _beadPoints[0].position : transform.position;
+    public Vector3 GetLastBeadPosition() => _beadPoints.Count > 0 ? _beadPoints[_beadPoints.Count - 1].position : transform.position;
+    public Vector3 GetSeamDirection() => _seamDirection;
+    public Vector3 GetSeamNormal() => _seamNormal;
+
+    public void Initialize(Vector3 startPoint, Vector3 direction, Vector3 normal)
+    {
+        _seamDirection = direction.normalized;
+        _seamNormal = normal.normalized;
+        _beadPoints.Clear();
+        _totalLength = 0f;
+        _hasPreviousPoint = false;
+        AddBeadInternal(startPoint, normal, forceAdd: true);
+    }
 
     // =====================================================
     // ОСНОВНОЙ ШОВ
     // =====================================================
-
     public void AddBead(Vector3 worldPoint, Vector3 normal)
     {
-        if (_hasPreviousPoint)
+        AddBeadInternal(worldPoint, normal, forceAdd: false);
+    }
+
+    private void AddBeadInternal(Vector3 worldPoint, Vector3 normal, bool forceAdd)
+    {
+        if (_hasPreviousPoint && !forceAdd)
         {
             float dist = Vector3.Distance(_previousPoint, worldPoint);
-
             if (dist < Spacing) return;
         }
 
         Vector3 direction = _hasPreviousPoint ? (worldPoint - _previousPoint).normalized : transform.forward;
-
         if (direction == Vector3.zero)
             direction = transform.forward;
 
         Quaternion rotation = Quaternion.LookRotation(direction, normal);
 
         if (!TryProjectToSurface(worldPoint, normal, out RaycastHit hit))
-        {
             return;
-        }
 
         GameObject obj = Instantiate(_weldBeadPrefab, hit.point + hit.normal * 0.0003f, rotation, transform);
-
-        float randomScale =
-            Random.Range(0.95f, 1.05f);
-
+        float randomScale = Random.Range(0.95f, 1.05f);
         obj.transform.localScale *= randomScale;
 
+        // сохраняем точку и нормаль
         _previousPoint = hit.point;
         _hasPreviousPoint = true;
+        _beadPoints.Add(new BeadPoint(hit.point, hit.normal));
+        if (_beadPoints.Count >= 2)
+        {
+            _totalLength += Vector3.Distance(_beadPoints[_beadPoints.Count - 2].position, _beadPoints[_beadPoints.Count - 1].position);
+        }
 
         RegisterMesh(obj);
     }
@@ -229,13 +262,15 @@ public class WeldMeshBuilder : MonoBehaviour
             Destroy(obj);
         }
     }
+}
+public struct BeadPoint
+{
+    public Vector3 position;
+    public Vector3 normal;
 
-    // =====================================================
-    // RESET
-    // =====================================================
-
-    public void ResetPath()
+    public BeadPoint(Vector3 pos, Vector3 norm)
     {
-        _hasPreviousPoint = false;
+        position = pos;
+        normal = norm;
     }
 }

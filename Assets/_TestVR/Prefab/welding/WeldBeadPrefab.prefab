@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4339179137217161079}
   - component: {fileID: 2484531167018687072}
   - component: {fileID: 2657966703519309183}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: WeldBeadPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
