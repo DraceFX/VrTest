@@ -4727,6 +4727,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.073
       objectReference: {fileID: 0}
+    - target: {fileID: 4053579577978487484, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: m_PhysicsLayerMask.m_Bits
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 4343660526480754339, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_InteractionLayers.m_Bits
       value: 3
@@ -4738,6 +4742,10 @@ PrefabInstance:
     - target: {fileID: 6232745470614056083, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436123941575367715, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: m_PhysicsLayerMask.m_Bits
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 6520291404937146767, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_ActionAssets.Array.size
@@ -5803,10 +5811,6 @@ PrefabInstance:
       value: MaskInteractable
       objectReference: {fileID: 0}
     - target: {fileID: 1922667642478300269, guid: 35ae570b873b13b41a201460d9a1c0aa, type: 3}
-      propertyPath: m_Layer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1922667642478300269, guid: 35ae570b873b13b41a201460d9a1c0aa, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -5848,14 +5852,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4401636666066119263, guid: 35ae570b873b13b41a201460d9a1c0aa, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6637106314131670135, guid: 35ae570b873b13b41a201460d9a1c0aa, type: 3}
-      propertyPath: m_Layer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7142585829252093130, guid: 35ae570b873b13b41a201460d9a1c0aa, type: 3}
-      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
