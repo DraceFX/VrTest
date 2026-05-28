@@ -11,12 +11,20 @@ public class GroundClamp : MonoBehaviour
     [Header("Состояние")]
     [SerializeField] private bool _isAttached = false;
 
+    [Header("Анимация")]
+    [SerializeField] private Transform _jawTransform;        // подвижная часть (губка)
+    [SerializeField] private Vector3 _openRotation = new Vector3(0, 0, 30f); // на сколько повернуть в открытом состоянии
+    [SerializeField] private float _animationSpeed = 8f;     // скорость поворота
+
     private Rigidbody _rb;
     private FixedJoint _joint;
     private Weldable _clampedWeldable;   // запоминаем, кого заземлили
     private XRGrabInteractable _xrGrab;
 
-    public bool IsAttached => _isAttached;
+    private bool _isOpen = false;
+    private bool _triggerHeld = false;
+    private Quaternion _closedRotation;
+    private Quaternion _targetJawRotation;
 
     private void Awake()
     {
@@ -27,6 +35,22 @@ public class GroundClamp : MonoBehaviour
         _xrGrab = GetComponent<XRGrabInteractable>();
 
         _xrGrab.activated.AddListener(OnActivated);
+        _xrGrab.deactivated.AddListener(OnDeactivated);
+
+        if (_jawTransform != null)
+        {
+            _closedRotation = _jawTransform.localRotation;
+            _targetJawRotation = _closedRotation;
+        }
+    }
+
+    private void Update()
+    {
+        // Плавный поворот челюсти к цели
+        if (_jawTransform != null)
+        {
+            _jawTransform.localRotation = Quaternion.RotateTowards(_jawTransform.localRotation, _targetJawRotation, _animationSpeed * Time.deltaTime);
+        }
     }
 
     private void OnDestroy()
@@ -34,51 +58,77 @@ public class GroundClamp : MonoBehaviour
         if (_xrGrab != null)
         {
             _xrGrab.activated.RemoveListener(OnActivated);
+            _xrGrab.deactivated.RemoveListener(OnDeactivated);
         }
     }
 
     private void OnJointBreak(float breakForce)
     {
         Detach();
+        SetOpen(false);
     }
 
     private void OnActivated(ActivateEventArgs args)
     {
+        _triggerHeld = true;
+
         if (_isAttached)
+        {
+            // Отсоединяем при нажатии триггера на прикреплённой клемме
             Detach();
-        else
-            TryAttach();
+            _isAttached = false;
+        }
+
+        // В любом случае открываем клемму
+        SetOpen(true);
     }
 
-    public void TryAttach()
+    private void OnDeactivated(DeactivateEventArgs args)
     {
-        if (_isAttached) return;
+        _triggerHeld = false;
 
+        if (_isOpen && !_isAttached)
+        {
+            // Пытаемся захватить, если рядом есть подходящий объект
+            if (TryFindTarget(out Rigidbody targetRb))
+            {
+                AttachTo(targetRb);
+            }
+        }
+
+        // Закрываем клемму
+        SetOpen(false);
+    }
+
+    private bool TryFindTarget(out Rigidbody targetRb)
+    {
+        targetRb = null;
         Collider[] hits = Physics.OverlapSphere(_contactPoint.position, _contactRadius);
         foreach (var hit in hits)
         {
             Rigidbody hitRb = hit.GetComponentInParent<Rigidbody>();
-            if (hitRb == null) continue;
-
-            // Крепимся к первому попавшемуся Rigidbody
-            AttachTo(hitRb);
-            return;
+            if (hitRb != null)
+            {
+                targetRb = hitRb;
+                return true;
+            }
         }
+        return false;
     }
 
     private void AttachTo(Rigidbody targetRb)
     {
-        // Физическое соединение
+        if (_isAttached) return;
+
         _joint = gameObject.AddComponent<FixedJoint>();
         _joint.connectedBody = targetRb;
         _joint.autoConfigureConnectedAnchor = true;
-        _joint.breakForce = 5000f; // Настройте под свой проект
+        _joint.breakForce = 5000f;
         _joint.breakTorque = 1000f;
         _joint.enableCollision = false;
 
         _isAttached = true;
 
-        // Пытаемся найти Weldable на цели и "заземлить" его
         _clampedWeldable = targetRb.GetComponentInParent<Weldable>();
         if (_clampedWeldable != null)
         {
@@ -90,14 +140,12 @@ public class GroundClamp : MonoBehaviour
     {
         if (!_isAttached) return;
 
-        // Сначала снимаем заземление с Weldable, если был
         if (_clampedWeldable != null)
         {
             _clampedWeldable.SetClamped(false);
             _clampedWeldable = null;
         }
 
-        // Убираем физическое соединение
         if (_joint != null)
         {
             Destroy(_joint);
@@ -105,6 +153,20 @@ public class GroundClamp : MonoBehaviour
         }
 
         _isAttached = false;
+    }
+
+    private void SetOpen(bool open)
+    {
+        _isOpen = open;
+
+        if (_jawTransform != null)
+        {
+            _targetJawRotation = open ? _closedRotation * Quaternion.Euler(_openRotation) : _closedRotation;
+        }
+        else
+        {
+            Debug.LogWarning("GroundClamp: _jawTransform не назначен. Анимация не работает.");
+        }
     }
 
     private void OnDrawGizmosSelected()

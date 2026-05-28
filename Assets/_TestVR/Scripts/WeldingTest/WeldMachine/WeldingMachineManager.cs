@@ -54,6 +54,18 @@ public class WeldingMachineManager : MonoBehaviour
             _voltage.OnVoltageChanged(voltageRounded);
     }
 
+    private void OnDisable()
+    {
+        if (InteractionManager.Instance != null)
+            InteractionManager.Instance.OnObjectUsed -= CablesIsConeccted;
+    }
+
+    private void OnDestroy()
+    {
+        if (InteractionManager.Instance != null)
+            InteractionManager.Instance.OnObjectUsed -= CablesIsConeccted;
+    }
+
     public void EnableWeldingMachine(bool isEnabled)
     {
         _infoCanvas.SetActive(isEnabled);
@@ -74,6 +86,11 @@ public class WeldingMachineManager : MonoBehaviour
         if (trigger.Id == "GroundedClamp")
         {
             _groundedClampConnected = true;
+        }
+
+        if (_machineEnable)
+        {
+            IsMachineReady = ReadyToWelding();
         }
     }
 

@@ -96,6 +96,13 @@ public class Welder : MonoBehaviour
                 Vector3 forwardOnSurface = Vector3.ProjectOnPlane(electrode.Tip.forward, hit.normal).normalized;
                 _sessionManager.StartNewWeld(_contactDetector.TargetA, _contactDetector.TargetB, hit.point, hit.normal, forwardOnSurface);
             }
+            else
+            {
+                if (_sessionManager.ActiveTargetB == null && _contactDetector.TargetB != null)
+                {
+                    _sessionManager.SetSecondTarget(_contactDetector.TargetB);
+                }
+            }
 
             WeldMeshBuilder builder = _sessionManager.ActiveBuilder;
             if (builder == null) return;

@@ -261,6 +261,14 @@ public class WeldMeshBuilder : MonoBehaviour
         {
             Destroy(obj);
         }
+
+        if (rootMR != null && rootMR.sharedMaterial != null)
+        {
+            // Создаём копию материала, чтобы не менять общий материал префаба
+            Material mat = new Material(rootMR.sharedMaterial);
+            mat.SetFloat("_Heat", 0f);
+            rootMR.material = mat;
+        }
     }
 }
 public struct BeadPoint

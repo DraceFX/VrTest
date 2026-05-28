@@ -14,6 +14,8 @@ public class WeldSessionManager : MonoBehaviour
     public WeldMeshBuilder ActiveBuilder { get; private set; }
     public bool IsAssemblyCreated => CurrentAssembly != null;
     public bool IsSessionActive => _isSessionActive;
+    public Weldable ActiveTargetA => _pendingA;
+    public Weldable ActiveTargetB => _pendingB;
 
     private bool _isSessionActive = false;
     private Weldable _pendingA;
@@ -23,9 +25,9 @@ public class WeldSessionManager : MonoBehaviour
     public void StartNewWeld(Weldable a, Weldable b, Vector3 startPoint, Vector3 normal, Vector3 forward)
     {
         // Проверка входных данных
-        if (a == null || b == null)
+        if (a == null)
         {
-            Debug.LogError("[WeldSession] StartNewWeld: один из Weldable равен null!");
+            Debug.LogError("[WeldSession] StartNewWeld: Weldable A равен null!");
             return;
         }
 
@@ -33,12 +35,6 @@ public class WeldSessionManager : MonoBehaviour
         if (_weldMeshPrefab == null)
         {
             Debug.LogError("[WeldSession] _weldMeshPrefab не назначен в инспекторе!");
-            return;
-        }
-
-        if (_weldMeshPrefab == null)
-        {
-            Debug.LogError("[WeldSession] Префаб шва (_weldMeshPrefab) не назначен!");
             return;
         }
 
@@ -69,6 +65,21 @@ public class WeldSessionManager : MonoBehaviour
         if (_debugMode) Debug.Log($"[WeldSession] Начат шов между {a.name} и {b.name}");
     }
 
+    public void SetSecondTarget(Weldable b)
+    {
+        if (!_isSessionActive)
+        {
+            Debug.LogWarning("[WeldSession] Попытка установить TargetB без активной сессии");
+            return;
+        }
+
+        if (b == null) return;
+
+        _pendingB = b;
+
+        if (_debugMode) Debug.Log($"[WeldSession] TargetB установлен: {b.name}");
+    }
+
     // Завершить текущий шов и сбросить состояние
     public void FinishWeld()
     {
@@ -97,9 +108,7 @@ public class WeldSessionManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[WeldSession] Нет ссылок на свариваемые объекты при завершении шва.");
-            if (ActiveBuilder != null)
-                Destroy(ActiveBuilder.gameObject);
+            Debug.LogError("[WeldSession] Односторонний шов завершён без физического соединения.");
         }
 
         // Визуализация профиля (при наличии визуализатора и данных)
@@ -111,7 +120,6 @@ public class WeldSessionManager : MonoBehaviour
                 List<Vector2> profile = WeldProfileBuilder.BuildProfile(beadPoints);
                 _profileVisualizer.DrawProfile(profile, ActiveBuilder.ActualLength,
                     _trajectoryEvaluator.WeaveAmplitude, _trajectoryEvaluator.CurrentPattern, _trajectoryEvaluator.WeaveFrequency);
-
                 float rms = CalculateRMS(profile, _trajectoryEvaluator);
                 float accuracy = Mathf.Clamp01(1f - rms / _trajectoryEvaluator.WeaveAmplitude);
                 Debug.Log($"Точность траектории: {accuracy * 100:F1}%");
