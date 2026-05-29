@@ -56,6 +56,9 @@ public class Electrode : MonoBehaviour
             _grabInteractable.selectEntered.RemoveListener(OnSelectEntered);
             _grabInteractable.selectExited.RemoveListener(OnSelectExited);
         }
+
+        if (AttachedSocket != null)
+            AttachedSocket.DetachElectrode(this);
     }
 
     private void OnSelectEntered(SelectEnterEventArgs args)
