@@ -23,6 +23,9 @@ public class Welder : MonoBehaviour
     private bool _isActivated;
     private XRGrabInteractable _xrGrab;
 
+    private enum ArcState { Idle, Striking, Welding, Stuck }
+    private ArcState _arcState = ArcState.Idle;
+    private float _stickTimer = 0f;
 
     private void Awake()
     {
@@ -76,48 +79,90 @@ public class Welder : MonoBehaviour
         if (electrode == null)
         {
             _effectController.StopEffects();
+            _arcState = ArcState.Idle;
+            _stickTimer = 0f;
             return;
         }
 
         float power = _settings.Power;
         bool hasContact = _contactDetector.Evaluate(electrode, out RaycastHit hit);
-
-        Debug.Log($"hasContact: {hasContact}, TargetA: {_contactDetector.TargetA?.name}, isGrounded: {_contactDetector.TargetA?.IsGrounded}");
+        bool hasArcHit = electrode.TryGetArcDistance(out RaycastHit arcHit, out float arcDist);
+        // Debug.Log($"hasContact: {hasContact}, TargetA: {_contactDetector.TargetA?.name}, isGrounded: {_contactDetector.TargetA?.IsGrounded}");
 
         // Трекинг траектории
         if (_isActivated && _trajectoryEvaluator != null)
             _trajectoryEvaluator.UpdateTracking(electrode.Tip.position);
 
-        // =========== Потеря контакта ===========
-        if (!hasContact)
+        // Проверка на прилипание во время Striking и Welding
+        if (_arcState == ArcState.Striking || _arcState == ArcState.Welding)
         {
-            if (_sessionManager.IsSessionActive)
+            // Зона прилипания: расстояние меньше StrikeMinGap
+            if (hasArcHit && arcDist < electrode.StrikeMinGap)
             {
-                StopWeld();   // обычная потеря контакта во время сварки
+                _stickTimer += Time.deltaTime;
+                if (_stickTimer >= electrode.StickTime)
+                {
+                    StickElectrode(electrode, arcHit);
+                    _arcState = ArcState.Stuck;
+                    _effectController.StopEffects();
+                    return; // дальнейшая обработка не нужна
+                }
             }
             else
             {
-                _effectController.StopEffects();
+                _stickTimer = 0f; // сброс, если электрод отошёл
             }
-            return;
-        }
-
-        // =========== Контакт есть ===========
-        WeldProcessModel model = _contactDetector.ProcessModel;
-        if (model == null) return;
-
-        // Старт сессии при первом касании
-        if (!_sessionManager.IsSessionActive)
-        {
-            StartWeldSession(electrode, hit);
         }
         else
         {
-            TrySetSecondTarget();
+            _stickTimer = 0f;
         }
 
-        // =========== Обычная сварка ===========
-        PerformWelding(electrode, model, hit, power);
+        // =========== Потеря контакта ===========
+        switch (_arcState)
+        {
+            case ArcState.Idle:
+                if (hasContact)
+                {
+                    _arcState = ArcState.Striking;
+                    _stickTimer = 0f;
+                    // эффект искры
+                }
+                else _effectController.StopEffects();
+                break;
+
+            case ArcState.Striking:
+                if (!hasArcHit || arcDist > electrode.ArcMaxDistance) // нужно свойство или поле
+                {
+                    _arcState = ArcState.Idle;
+                    _effectController.StopEffects();
+                }
+                else if (electrode.IsInArcGap(arcDist))
+                {
+                    _arcState = ArcState.Welding;
+                    StartWeldSession(electrode, arcHit);
+                }
+                // иначе всё ещё короткое замыкание (искра)
+                break;
+
+            case ArcState.Welding:
+                bool arcStable = hasArcHit && electrode.IsInArcGap(arcDist);
+                if (!arcStable)
+                {
+                    StopWeld();
+                    _arcState = ArcState.Idle;
+                }
+                else
+                {
+                    WeldProcessModel model = _contactDetector.ProcessModel;
+                    if (model == null) break;
+                    TrySetSecondTarget();
+                    PerformWelding(electrode, model, arcHit, power);
+                }
+                break;
+
+            case ArcState.Stuck: break;
+        }
     }
 
     private void StartWeldSession(Electrode electrode, RaycastHit hit)
@@ -167,5 +212,34 @@ public class Welder : MonoBehaviour
     {
         if (_isActivated && _weldingMachineManager.IsMachineReady) return true;
         return false;
+    }
+
+    private void StickElectrode(Electrode electrode, RaycastHit hit)
+    {
+        // Определяем объект, к которому прилипаем
+        Transform parent = null;
+        if (_contactDetector.TargetA != null)
+            parent = _contactDetector.TargetA.transform;
+        else if (hit.collider != null)
+            parent = hit.collider.transform;
+
+        if (parent == null)
+        {
+            Debug.LogError("Не удалось найти объект для прилипания электрода!");
+            return;
+        }
+
+        // 1. Отсоединяем электрод от держателя
+        _socket.DetachElectrode(electrode);
+
+        // 2. Прилипаем к детали
+        electrode.StickToSurface(parent);
+
+        // 3. Останавливаем сессию и сбрасываем детектор
+        StopWeld();
+
+        Debug.Log($"Электрод прилип к {parent.name}");
+
+        // Здесь можно вызвать эффект дыма/искры через _effectController
     }
 }

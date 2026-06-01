@@ -23,12 +23,24 @@ public class Electrode : MonoBehaviour
     [Header("Geometry")]
     [SerializeField] private float _length = 1f;
 
+    [Header("Arc Striking")]
+    [SerializeField] private float _arcMaxDistance = 0.1f;     // дальность поиска дугового зазора
+    [SerializeField] private float _strikeMinGap = 0.006f;      // минимальный дуговой зазор
+    [SerializeField] private float _strikeMaxGap = 0.02f;      // максимальный дуговой зазор
+    [SerializeField] private Vector3 _arcBoxHalfExtents = new Vector3(0.002f, 0.002f, 0.01f); // форма BoxCast для дуги
+
+    [Header("Sticking")]
+    [SerializeField] private float _stickTime = 1f;
+
     public Rigidbody Rb => _rigidbody;
+    public float ArcMaxDistance => _arcMaxDistance;
+    public float StrikeMinGap => _strikeMinGap;
+    public float StrikeMaxGap => _strikeMaxGap;
+    public float StickTime => _stickTime;
 
     private bool _effectsActive = false;
     private float _currentPower;
     private float _optimalPower;
-
 
     private void Awake()
     {
@@ -131,6 +143,49 @@ public class Electrode : MonoBehaviour
         _effect.UpdateEffects(_currentPower, _optimalPower);
     }
 
+    public bool TryGetArcDistance(out RaycastHit hit, out float distance)
+    {
+        if (Tip == null)
+        {
+            hit = default;
+            distance = float.MaxValue;
+            return false;
+        }
+
+        Vector3 origin = Tip.position;
+        Vector3 direction = Tip.forward;
+
+        if (Physics.BoxCast(origin, _arcBoxHalfExtents, direction, out hit, Quaternion.LookRotation(direction), _arcMaxDistance))
+        {
+            distance = hit.distance;
+            return true;
+        }
+        else
+        {
+            hit = default;
+            distance = float.MaxValue;
+            return false;
+        }
+    }
+
+    public bool IsInArcGap(float distance)
+    {
+        return distance >= _strikeMinGap && distance <= _strikeMaxGap;
+    }
+
+    public void StickToSurface(Transform parent)
+    {
+        // Сохраняем мировую позицию и поворот перед сменой родителя
+        Vector3 worldPos = transform.position;
+        Quaternion worldRot = transform.rotation;
+
+        transform.SetParent(parent, true);
+
+        // Принудительно включаем кинематику, даже если до этого была отключена
+        if (_rigidbody != null)
+            _rigidbody.isKinematic = true;
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (Tip != null)
@@ -138,5 +193,25 @@ public class Electrode : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(Tip.position, SearchRadius);
         }
+
+        Vector3 origin = Tip.position;
+        Vector3 direction = Tip.forward;
+
+        // ---------- 1. Основной луч (до _arcMaxDistance) ----------
+        Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.7f); // полупрозрачный серый
+        Gizmos.DrawRay(origin, direction * _arcMaxDistance);
+
+        // ---------- 2. Рабочий дуговой зазор ----------
+        Vector3 minGapPoint = origin + direction * _strikeMinGap;
+        Vector3 maxGapPoint = origin + direction * _strikeMaxGap;
+
+        // Отрезок между минимальным и максимальным зазором (зелёный)
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(minGapPoint, maxGapPoint);
+
+        // Небольшие сферы на границах зазора
+        float sphereRadius = 0.0005f; // полмиллиметра – не масштабируется, чисто маркер
+        Gizmos.DrawWireSphere(minGapPoint, sphereRadius);
+        Gizmos.DrawWireSphere(maxGapPoint, sphereRadius);
     }
 }
