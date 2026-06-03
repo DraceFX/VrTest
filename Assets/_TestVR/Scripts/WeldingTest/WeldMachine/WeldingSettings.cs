@@ -1,26 +1,24 @@
 using UnityEngine;
 
-public class WeldingSettings : MonoBehaviour
+public class WeldingSettings : MonoBehaviour, IPowerSource
 {
     [Header("Electrical")]
-    [Range(10f, 300f)]
-    public float current = 120f;   // Амперы
+    [Range(10f, 300f)][SerializeField] private float current = 120f;
 
-    [Range(10f, 40f)]
-    public float voltage = 24f;    // Вольты
+    [Range(10f, 40f)][SerializeField] private float voltage = 24f;
 
-    [Header("Derived")]
-    public float Power => current * voltage; // Ватты
+    public float Power => current * voltage;
 
-    public void OnCurrentChanged(float current)
+    public float Current => current;
+    public float Voltage => voltage;
+
+    public void SetCurrent(float value)
     {
-        // Debug.Log("Вольт: " + current);
-        this.current = current;
+        current = value;
     }
 
-    public void OnVoltageChanged(float voltage)
+    public void SetVoltage(float value)
     {
-        // Debug.Log("Вольт: " + voltage);
-        this.voltage = voltage;
+        voltage = value;
     }
 }

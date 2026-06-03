@@ -12818,6 +12818,10 @@ PrefabInstance:
       propertyPath: _voltage
       value: 
       objectReference: {fileID: 1990438146}
+    - target: {fileID: 400793545353701582, guid: bfa9082b182949147ae67b8961690259, type: 3}
+      propertyPath: _powerSourceComponent
+      value: 
+      objectReference: {fileID: 1990438146}
     - target: {fileID: 6493056593730182007, guid: bfa9082b182949147ae67b8961690259, type: 3}
       propertyPath: m_Name
       value: welding machine
@@ -15656,6 +15660,14 @@ PrefabInstance:
       value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
+      propertyPath: _socketComponent
+      value: 
+      objectReference: {fileID: 1771166224262031631}
+    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
+      propertyPath: _powerSourceComponent
+      value: 
+      objectReference: {fileID: 1990438146}
+    - target: {fileID: 2825748162737126991, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
       propertyPath: _weldingMachineManager
       value: 
       objectReference: {fileID: 1403739914}
@@ -15717,6 +15729,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3940032844752965542, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
   m_PrefabInstance: {fileID: 1771166224262031629}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1771166224262031631 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 238893991371369178, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
+  m_PrefabInstance: {fileID: 1771166224262031629}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8725aa98e68ead0498d7fdd4e63f3512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectrodeSocket
 --- !u!1001 &1783901723533367896
 PrefabInstance:
   m_ObjectHideFlags: 0

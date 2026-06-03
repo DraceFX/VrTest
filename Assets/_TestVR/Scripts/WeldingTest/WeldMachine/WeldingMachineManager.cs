@@ -12,16 +12,17 @@ public class WeldingMachineManager : MonoBehaviour
     [SerializeField] private XRKnob _voltageKnob;
 
     [Header("Value Range")]
-    public float MminAmperValue = 10f;
+    public float MinAmperValue = 10f;
     public float MaxAmperValue = 300f;
-
     public float MinVoltageValue = 10f;
     public float MaxVoltageValue = 40f;
 
+    [Header("Power Source (IPowerSource)")]
+    [SerializeField] private MonoBehaviour _powerSourceComponent;  // перетаскиваем сюда WeldingSettings
+    private IPowerSource _powerSource;
+
     [Header("Optional")]
     [SerializeField] private TMP_Text _textInfo;
-    [SerializeField] private WeldingSettings _amper;
-    [SerializeField] private WeldingSettings _voltage;
 
     public bool IsMachineReady;
 
@@ -31,15 +32,19 @@ public class WeldingMachineManager : MonoBehaviour
 
     private void Start()
     {
+        _powerSource = _powerSourceComponent as IPowerSource;
+        if (_powerSource == null)
+            Debug.LogError("PowerSource не реализует IPowerSource");
+
         InteractionManager.Instance.OnObjectUsed += CablesIsConeccted;
     }
 
     private void Update()
     {
-        if (_amperKnob == null && _voltageKnob == null)
+        if (_amperKnob == null || _voltageKnob == null || _powerSource == null)
             return;
 
-        float rawAmper = Mathf.Lerp(MminAmperValue, MaxAmperValue, _amperKnob.value);
+        float rawAmper = Mathf.Lerp(MinAmperValue, MaxAmperValue, _amperKnob.value);
         float rawVoltage = Mathf.Lerp(MinVoltageValue, MaxVoltageValue, _voltageKnob.value);
 
         int amperRounded = Mathf.RoundToInt(rawAmper);
@@ -48,10 +53,8 @@ public class WeldingMachineManager : MonoBehaviour
         if (_textInfo != null)
             _textInfo.text = $"A:{amperRounded} V:{voltageRounded}";
 
-        if (_amper != null)
-            _amper.OnCurrentChanged(amperRounded);
-        if (_voltage != null)
-            _voltage.OnVoltageChanged(voltageRounded);
+        _powerSource.SetCurrent(amperRounded);
+        _powerSource.SetVoltage(voltageRounded);
     }
 
     private void OnDisable()
@@ -70,7 +73,6 @@ public class WeldingMachineManager : MonoBehaviour
     {
         _infoCanvas.SetActive(isEnabled);
         _machineEnable = isEnabled;
-
         IsMachineReady = ReadyToWelding();
     }
 
@@ -79,19 +81,13 @@ public class WeldingMachineManager : MonoBehaviour
         if (trigger == null) return;
 
         if (trigger.Id == "Welder")
-        {
             _welderConnected = true;
-        }
 
         if (trigger.Id == "GroundedClamp")
-        {
             _groundedClampConnected = true;
-        }
 
         if (_machineEnable)
-        {
             IsMachineReady = ReadyToWelding();
-        }
     }
 
     private bool ReadyToWelding()

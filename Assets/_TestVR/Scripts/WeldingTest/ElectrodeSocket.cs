@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ElectrodeSocket : MonoBehaviour
+public class ElectrodeSocket : MonoBehaviour, IToolSocket
 {
     [Header("Настройки крепления")]
     [SerializeField] private Transform _attachPoint;      // Точка, к которой прикрепляется электрод
@@ -9,9 +9,9 @@ public class ElectrodeSocket : MonoBehaviour
 
     public Electrode AttachedElectrode { get; private set; }
 
-    public System.Action<Electrode> OnElectrodeAttached;
-    public System.Action OnElectrodeDetached;
-
+    public IWeldingTool AttachedTool => AttachedElectrode as IWeldingTool;
+    public event System.Action<IWeldingTool> ToolAttached;
+    public event System.Action ToolDetached;
 
     // Пытается прикрепить электрод к держателю.
     public void TryAttachElectrode(Electrode electrode)
@@ -19,15 +19,12 @@ public class ElectrodeSocket : MonoBehaviour
         if (AttachedElectrode != null)
             return;
 
-        // 1. Вычисляем текущий угол электрода относительно оси вращения
         Quaternion localRotation = Quaternion.Inverse(_attachPoint.rotation) * electrode.transform.rotation;
         float currentAngle = GetAngleAroundAxis(localRotation, _rotationAxis);
-        currentAngle = (currentAngle % 360f + 360f) % 360f; // Нормализуем в [0, 360)
+        currentAngle = (currentAngle % 360f + 360f) % 360f;
 
-        // 2. Находим ближайший фиксированный угол
         float closestAngle = FindClosestAngle(currentAngle);
 
-        // 3. Фиксируем электрод
         AttachedElectrode = electrode;
         electrode.AttachedSocket = this;
         electrode.CurrentSocket = null;
@@ -36,9 +33,10 @@ public class ElectrodeSocket : MonoBehaviour
         electrode.transform.localPosition = Vector3.zero;
         electrode.transform.localRotation = Quaternion.AngleAxis(closestAngle, _rotationAxis);
 
-        electrode.Rb.isKinematic = true; // Отключаем физику
+        electrode.Rb.isKinematic = true;
 
-        OnElectrodeAttached?.Invoke(electrode);
+        // Вызываем старые и новые события
+        ToolAttached?.Invoke(electrode as IWeldingTool);
     }
 
     /// Открепляет электрод от держателя.
@@ -52,7 +50,7 @@ public class ElectrodeSocket : MonoBehaviour
         electrode.transform.SetParent(null);
         electrode.Rb.isKinematic = false;
 
-        OnElectrodeDetached?.Invoke();
+        ToolDetached?.Invoke();
     }
 
     private float FindClosestAngle(float currentAngle)
@@ -83,5 +81,17 @@ public class ElectrodeSocket : MonoBehaviour
             return euler.y * Mathf.Sign(axis.y);
         else
             return euler.z * Mathf.Sign(axis.z);
+    }
+
+    public void Attach(IWeldingTool tool)
+    {
+        if (tool is Electrode electrode)
+            DetachElectrode(electrode);
+    }
+
+    public void Detach(IWeldingTool tool)
+    {
+        if (tool is Electrode electrode)
+            DetachElectrode(electrode);
     }
 }

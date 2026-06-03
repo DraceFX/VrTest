@@ -4,10 +4,10 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class Welder : MonoBehaviour
 {
-    [Header("Компоненты")]
-    [SerializeField] private ElectrodeSocket _socket;
+    [Header("Компоненты (интерфейсы)")]
+    [SerializeField] private MonoBehaviour _socketComponent;    // реализует IToolSocket (например, ElectrodeSocket)
     [SerializeField] private WeldingMachineManager _weldingMachineManager;
-    [SerializeField] private WeldingSettings _settings;
+    [SerializeField] private MonoBehaviour _powerSourceComponent; // реализует IPowerSource (WeldingSettings)
 
     [Header("Модули")]
     [SerializeField] private WeldContactDetector _contactDetector;
@@ -27,9 +27,14 @@ public class Welder : MonoBehaviour
     private ArcState _arcState = ArcState.Idle;
     private float _stickTimer = 0f;
 
+    private IToolSocket _socket;
+    private IPowerSource _powerSource;
+
     private void Awake()
     {
         _xrGrab = GetComponent<XRGrabInteractable>();
+        _socket = _socketComponent as IToolSocket;
+        _powerSource = _powerSourceComponent as IPowerSource;
 
         if (_needPressTrigger)
         {
@@ -44,7 +49,6 @@ public class Welder : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Отписка от событий
         if (_xrGrab != null)
         {
             _xrGrab.activated.RemoveListener(OnActivated);
@@ -52,31 +56,22 @@ public class Welder : MonoBehaviour
         }
     }
 
-    private void OnActivated(ActivateEventArgs args)
-    {
-        SetActivated(true);
-    }
-
-    private void OnDeactivated(DeactivateEventArgs args)
-    {
-        SetActivated(false);
-    }
+    private void OnActivated(ActivateEventArgs args) => SetActivated(true);
+    private void OnDeactivated(DeactivateEventArgs args) => SetActivated(false);
 
     public void SetActivated(bool state)
     {
         _isActivated = state;
-        if (!state)
-        {
-            StopWeld();
-        }
+        if (!state) StopWeld();
     }
 
     private void Update()
     {
         if (!PrepareToWeld()) return;
 
-        Electrode electrode = _socket?.AttachedElectrode;
-        if (electrode == null)
+        IWeldingTool weldingTool = _socket?.AttachedTool;
+        Electrode electrode = weldingTool as Electrode; // кастинг для старых модулей
+        if (weldingTool == null)
         {
             _effectController.StopEffects();
             _arcState = ArcState.Idle;
@@ -84,33 +79,32 @@ public class Welder : MonoBehaviour
             return;
         }
 
-        float power = _settings.Power;
-        bool hasContact = _contactDetector.Evaluate(electrode, out RaycastHit hit);
-        bool hasArcHit = electrode.TryGetArcDistance(out RaycastHit arcHit, out float arcDist);
-        // Debug.Log($"hasContact: {hasContact}, TargetA: {_contactDetector.TargetA?.name}, isGrounded: {_contactDetector.TargetA?.IsGrounded}");
+        float power = _powerSource != null ? _powerSource.Power : 0f;
+        bool hasContact = _contactDetector.Evaluate(electrode, out RaycastHit hit); // модуль пока ждёт Electrode
+        bool hasArcHit = weldingTool.TryGetArcContact(out RaycastHit arcHit, out float arcDist);
 
         // Трекинг траектории
         if (_isActivated && _trajectoryEvaluator != null)
-            _trajectoryEvaluator.UpdateTracking(electrode.Tip.position);
+            _trajectoryEvaluator.UpdateTracking(weldingTool.TipPosition);
 
-        // Проверка на прилипание во время Striking и Welding
+        // Залипание (только для электрода)
         if (_arcState == ArcState.Striking || _arcState == ArcState.Welding)
         {
-            // Зона прилипания: расстояние меньше StrikeMinGap
-            if (hasArcHit && arcDist < electrode.StrikeMinGap)
+            if (hasArcHit && arcDist < weldingTool.StrikeMinGap)
             {
                 _stickTimer += Time.deltaTime;
-                if (_stickTimer >= electrode.StickTime)
+                float stickTime = electrode != null ? electrode.StickTime : float.PositiveInfinity;
+                if (_stickTimer >= stickTime)
                 {
-                    StickElectrode(electrode, arcHit);
+                    StickElectrode(arcHit);
                     _arcState = ArcState.Stuck;
                     _effectController.StopEffects();
-                    return; // дальнейшая обработка не нужна
+                    return;
                 }
             }
             else
             {
-                _stickTimer = 0f; // сброс, если электрод отошёл
+                _stickTimer = 0f;
             }
         }
         else
@@ -118,7 +112,7 @@ public class Welder : MonoBehaviour
             _stickTimer = 0f;
         }
 
-        // =========== Потеря контакта ===========
+        // Конечный автомат дуги
         switch (_arcState)
         {
             case ArcState.Idle:
@@ -126,27 +120,26 @@ public class Welder : MonoBehaviour
                 {
                     _arcState = ArcState.Striking;
                     _stickTimer = 0f;
-                    // эффект искры
                 }
-                else _effectController.StopEffects();
+                else
+                    _effectController.StopEffects();
                 break;
 
             case ArcState.Striking:
-                if (!hasArcHit || arcDist > electrode.ArcMaxDistance) // нужно свойство или поле
+                if (!hasArcHit || arcDist > weldingTool.ArcMaxDistance)
                 {
                     _arcState = ArcState.Idle;
                     _effectController.StopEffects();
                 }
-                else if (electrode.IsInArcGap(arcDist))
+                else if (weldingTool.IsInArcGap(arcDist))
                 {
                     _arcState = ArcState.Welding;
-                    StartWeldSession(electrode, arcHit);
+                    StartWeldSession(arcHit);
                 }
-                // иначе всё ещё короткое замыкание (искра)
                 break;
 
             case ArcState.Welding:
-                bool arcStable = hasArcHit && electrode.IsInArcGap(arcDist);
+                bool arcStable = hasArcHit && weldingTool.IsInArcGap(arcDist);
                 if (!arcStable)
                 {
                     StopWeld();
@@ -155,19 +148,22 @@ public class Welder : MonoBehaviour
                 else
                 {
                     WeldProcessModel model = _contactDetector.ProcessModel;
-                    if (model == null) break;
-                    TrySetSecondTarget();
-                    PerformWelding(electrode, model, arcHit, power);
+                    if (model != null)
+                    {
+                        TrySetSecondTarget();
+                        PerformWelding(weldingTool, model, arcHit, power);
+                    }
                 }
                 break;
-
-            case ArcState.Stuck: break;
         }
     }
 
-    private void StartWeldSession(Electrode electrode, RaycastHit hit)
+    private void StartWeldSession(RaycastHit hit)
     {
-        Vector3 forwardOnSurface = Vector3.ProjectOnPlane(electrode.Tip.forward, hit.normal).normalized;
+        IWeldingTool tool = _socket?.AttachedTool;
+        if (tool == null) return;
+
+        Vector3 forwardOnSurface = Vector3.ProjectOnPlane(tool.TipForward, hit.normal).normalized;
         _sessionManager.StartNewWeld(_contactDetector.TargetA, _contactDetector.TargetB, hit.point, hit.normal, forwardOnSurface);
     }
 
@@ -177,7 +173,7 @@ public class Welder : MonoBehaviour
             _sessionManager.SetSecondTarget(_contactDetector.TargetB);
     }
 
-    private void PerformWelding(Electrode electrode, WeldProcessModel model, RaycastHit hit, float power)
+    private void PerformWelding(IWeldingTool tool, WeldProcessModel model, RaycastHit hit, float power)
     {
         WeldMeshBuilder builder = _sessionManager.ActiveBuilder;
         if (builder == null) return;
@@ -189,16 +185,25 @@ public class Welder : MonoBehaviour
         float powerQuality = model.EvaluateQuality(power);
         float trajectoryFactor = _trajectoryEvaluator != null ? _trajectoryEvaluator.TrajectoryQuality : 1f;
         float finalQuality = powerQuality * trajectoryFactor;
-        float arcDistFull = Vector3.Distance(electrode.Tip.position, hit.point);
-        float idealArc = electrode.WeldDistance * 0.7f;
+        float arcDistFull = Vector3.Distance(tool.TipPosition, hit.point);
+        float idealArc = tool.WeldDistance * 0.7f;
 
-        _qualityAssessor?.UpdateAssessment(power, model.OptimalPower, electrode.Tip.position, arcDistFull, idealArc, builder.Spacing);
+        _qualityAssessor?.UpdateAssessment(power, model.OptimalPower, tool.TipPosition, arcDistFull, idealArc, builder.Spacing);
 
-        _defectEngine.ProcessDefects(builder, model, power, finalQuality, hit.point, hit.normal, electrode, hit);
-
-        _effectController.StartEffects(electrode, power, model.OptimalPower);
-        _effectController.UpdateEffects(power);
-        _electrodeConsumer.ConsumeElectrode(electrode, model, power);
+        // Модули пока требуют Electrode, делаем кастинг
+        Electrode electrode = tool as Electrode;
+        if (electrode != null)
+        {
+            _defectEngine.ProcessDefects(builder, model, power, finalQuality, hit.point, hit.normal, electrode, hit);
+            _effectController.StartEffects(electrode, power, model.OptimalPower);
+            _effectController.UpdateEffects(power);
+            _electrodeConsumer.ConsumeElectrode(electrode, model, power);
+        }
+        else
+        {
+            // Для других инструментов эффекты и расход можно будет реализовать позже
+            Debug.LogWarning("Эффекты и расход не поддерживаются для данного инструмента");
+        }
     }
 
     private void StopWeld()
@@ -210,13 +215,15 @@ public class Welder : MonoBehaviour
 
     private bool PrepareToWeld()
     {
-        if (_isActivated && _weldingMachineManager.IsMachineReady) return true;
-        return false;
+        return _isActivated && _weldingMachineManager.IsMachineReady;
     }
 
-    private void StickElectrode(Electrode electrode, RaycastHit hit)
+    private void StickElectrode(RaycastHit hit)
     {
-        // Определяем объект, к которому прилипаем
+        IWeldingTool tool = _socket?.AttachedTool;
+        Electrode electrode = tool as Electrode;
+        if (electrode == null) return;
+
         Transform parent = null;
         if (_contactDetector.TargetA != null)
             parent = _contactDetector.TargetA.transform;
@@ -229,17 +236,12 @@ public class Welder : MonoBehaviour
             return;
         }
 
-        // 1. Отсоединяем электрод от держателя
-        _socket.DetachElectrode(electrode);
-
-        // 2. Прилипаем к детали
+        // Отсоединяем электрод через интерфейс сокета
+        _socket.Detach(tool);
+        // Прилипаем (специфика электрода)
         electrode.StickToSurface(parent);
 
-        // 3. Останавливаем сессию и сбрасываем детектор
         StopWeld();
-
         Debug.Log($"Электрод прилип к {parent.name}");
-
-        // Здесь можно вызвать эффект дыма/искры через _effectController
     }
 }
