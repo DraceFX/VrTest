@@ -45,16 +45,17 @@ public class WeldingMaskController : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Плавный возврат к целевому углу
         if (!_grab.isSelected)
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, _targetRot, Time.deltaTime * _smoothSpeed);
-        }
+            // Плавный возврат к целевому углу
+            transform.localRotation = Quaternion.Slerp(
+                transform.localRotation, _targetRot, Time.deltaTime * _smoothSpeed);
 
-        // Жёсткое ограничение вращения
-        float x = transform.localEulerAngles.x;
-        if (x > 180f) x -= 360f;
-        x = Mathf.Clamp(x, _downAngle, _upAngle);
-        transform.localRotation = Quaternion.Euler(x, 0f, 0f);
+            // Ограничение угла и фиксация осей
+            float x = transform.localEulerAngles.x;
+            if (x > 180f) x -= 360f;
+            x = Mathf.Clamp(x, _downAngle, _upAngle);
+            transform.localRotation = Quaternion.Euler(x, 0f, 0f);
+        }
     }
 }

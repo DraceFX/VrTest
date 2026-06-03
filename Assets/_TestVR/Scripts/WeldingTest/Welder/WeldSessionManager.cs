@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeldSessionManager : MonoBehaviour
+public class WeldSessionManager : MonoBehaviour, IWeldSessionManager
 {
     [Header("Зависимости")]
     [SerializeField] private GameObject _weldMeshPrefab;
-    [SerializeField] private WeldTrajectoryEvaluator _trajectoryEvaluator;
-    [SerializeField] private WeldQualityAssessor _qualityAssessor;
+    [SerializeField] private MonoBehaviour _trajectoryEvaluatorComponent;
+    [SerializeField] private MonoBehaviour _qualityAssessorComponent;
     [SerializeField] private WeldProfileVisualizer _profileVisualizer;
+
     [SerializeField] private bool _debugMode = true;
+
+    private IWeldTrajectoryEvaluator _trajectoryEvaluator;
+    private IWeldQualityAssessor _qualityAssessor;
 
     public WeldAssembly CurrentAssembly { get; private set; }
     public WeldMeshBuilder ActiveBuilder { get; private set; }
@@ -21,24 +25,27 @@ public class WeldSessionManager : MonoBehaviour
     private Weldable _pendingA;
     private Weldable _pendingB;
 
+    private void Awake()
+    {
+        _qualityAssessor = _qualityAssessorComponent as IWeldQualityAssessor;
+        _trajectoryEvaluator = _trajectoryEvaluatorComponent as IWeldTrajectoryEvaluator;
+    }
+
     //Начать новый шов (создать сборку и билдер)
     public void StartNewWeld(Weldable a, Weldable b, Vector3 startPoint, Vector3 normal, Vector3 forward)
     {
-        // Проверка входных данных
         if (a == null)
         {
             Debug.LogError("[WeldSession] StartNewWeld: Weldable A равен null!");
             return;
         }
 
-        // Проверка префаба меша
         if (_weldMeshPrefab == null)
         {
             Debug.LogError("[WeldSession] _weldMeshPrefab не назначен в инспекторе!");
             return;
         }
 
-        // Сохраняем объекты для последующего создания WeldAssembly
         _pendingA = a;
         _pendingB = b;
         CurrentAssembly = null;
@@ -54,14 +61,10 @@ public class WeldSessionManager : MonoBehaviour
 
         go.transform.SetParent(a.transform, worldPositionStays: true);
 
-        // Инициализируем системы
-        if (_trajectoryEvaluator != null)
-            _trajectoryEvaluator.Initialize(startPoint, normal, forward);
-        if (_qualityAssessor != null)
-            _qualityAssessor.StartAssessment();
+        _trajectoryEvaluator?.Initialize(startPoint, normal, forward);
+        _qualityAssessor?.StartAssessment();
 
         _isSessionActive = true;
-
         if (_debugMode) Debug.Log($"[WeldSession] Начат шов между {a.name} и {b.name}");
     }
 
@@ -72,11 +75,8 @@ public class WeldSessionManager : MonoBehaviour
             Debug.LogWarning("[WeldSession] Попытка установить TargetB без активной сессии");
             return;
         }
-
         if (b == null) return;
-
         _pendingB = b;
-
         if (_debugMode) Debug.Log($"[WeldSession] TargetB установлен: {b.name}");
     }
 
@@ -84,8 +84,6 @@ public class WeldSessionManager : MonoBehaviour
     public void FinishWeld()
     {
         float finalQuality = 0f;
-
-        // Получаем итоговое качество от асессора
         if (_qualityAssessor != null)
         {
             _qualityAssessor.StopAssessment();
@@ -93,47 +91,45 @@ public class WeldSessionManager : MonoBehaviour
             Debug.Log($"Шов завершён. Качество: {finalQuality * 100:F1}%");
         }
 
-        // Сбрасываем оценщик траектории
         _trajectoryEvaluator?.Reset();
 
-        // Объединяем меш шва (если билдер существует)
-        if (ActiveBuilder != null)
-            ActiveBuilder.CombineAll();
+        ActiveBuilder?.CombineAll();
 
-        // Создаём физическое соединение с прочностью, зависящей от качества
         if (_pendingA != null && _pendingB != null)
         {
             CurrentAssembly = WeldAssembly.Create(_pendingA, _pendingB, finalQuality, ActiveBuilder?.gameObject);
-            // Меш уже является дочерним к _pendingA.transform, дополнительных действий не требуется
         }
         else
         {
             Debug.LogError("[WeldSession] Односторонний шов завершён без физического соединения.");
         }
 
-        // Визуализация профиля (при наличии визуализатора и данных)
+        // Дебаг-визуализация профиля (только если визуализатор назначен и есть данные)
         if (_profileVisualizer != null && ActiveBuilder != null)
         {
             var beadPoints = new List<BeadPoint>(ActiveBuilder.BeadPoints);
             if (beadPoints.Count > 1 && _trajectoryEvaluator != null)
             {
                 List<Vector2> profile = WeldProfileBuilder.BuildProfile(beadPoints);
+                WeldPattern pattern = (_trajectoryEvaluator as WeldTrajectoryEvaluator)?.CurrentPattern ?? WeldPattern.Straight;
+
                 _profileVisualizer.DrawProfile(profile, ActiveBuilder.ActualLength,
-                    _trajectoryEvaluator.WeaveAmplitude, _trajectoryEvaluator.CurrentPattern, _trajectoryEvaluator.WeaveFrequency);
+                                                _trajectoryEvaluator.WeaveAmplitude,
+                                                pattern, _trajectoryEvaluator.WeaveFrequency);
+
                 float rms = CalculateRMS(profile, _trajectoryEvaluator);
                 float accuracy = Mathf.Clamp01(1f - rms / _trajectoryEvaluator.WeaveAmplitude);
                 Debug.Log($"Точность траектории: {accuracy * 100:F1}%");
             }
         }
 
-        // Сброс состояния сессии
         ActiveBuilder = null;
         _pendingA = null;
         _pendingB = null;
         _isSessionActive = false;
     }
 
-    private float CalculateRMS(List<Vector2> realProfile, WeldTrajectoryEvaluator evaluator)
+    private float CalculateRMS(List<Vector2> realProfile, IWeldTrajectoryEvaluator evaluator)
     {
         if (realProfile.Count < 2) return 0f;
         float sumSq = 0f;
@@ -152,7 +148,7 @@ public class WeldSessionManager : MonoBehaviour
     {
         if (CurrentAssembly != null)
         {
-            Destroy(CurrentAssembly);   // удаляет компонент и Joint
+            Destroy(CurrentAssembly);
             CurrentAssembly = null;
         }
 

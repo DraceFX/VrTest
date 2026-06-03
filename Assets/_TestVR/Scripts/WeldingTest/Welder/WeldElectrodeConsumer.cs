@@ -1,12 +1,13 @@
 using UnityEngine;
 
-public class WeldElectrodeConsumer : MonoBehaviour
+public class WeldElectrodeConsumer : MonoBehaviour, IWeldConsumableConsumer
 {
-    public void ConsumeElectrode(Electrode electrode, WeldProcessModel model, float power)
+    public void Consume(IWeldingTool tool, WeldProcessModel model, float power)
     {
-        if (model == null || electrode == null) return;
+        if (model == null || tool == null || !tool.IsConsumable)
+            return;
 
         float melt = model.EvaluateMelt(power) * Time.deltaTime;
-        electrode.Burn(melt);
+        tool.Consume(melt);
     }
 }

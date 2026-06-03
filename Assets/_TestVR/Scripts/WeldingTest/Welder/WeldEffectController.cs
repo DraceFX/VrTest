@@ -1,34 +1,34 @@
 using UnityEngine;
 
-public class WeldEffectController : MonoBehaviour
+public class WeldEffectController : MonoBehaviour, IWeldEffectController
 {
-    private Electrode _currentElectrode;
+    private IWeldingTool _currentTool;
     private bool _effectsPlaying;
 
-    public void StartEffects(Electrode electrode, float power, float optimalPower)
+    public void StartEffects(IWeldingTool tool, float power, float optimalPower)
     {
-        if (electrode == null) return;
-        if (_effectsPlaying && _currentElectrode == electrode) return;
+        if (tool == null) return;
+        if (_effectsPlaying && _currentTool == tool) return;
 
         StopEffects();
-        _currentElectrode = electrode;
-        _currentElectrode.StartWeldEffects(power, optimalPower);
+        _currentTool = tool;
+        _currentTool.StartWeldEffects(power, optimalPower);
         _effectsPlaying = true;
     }
 
     public void UpdateEffects(float power)
     {
-        if (_effectsPlaying && _currentElectrode != null)
-            _currentElectrode.UpdateWeldEffects(power);
+        if (_effectsPlaying && _currentTool != null)
+            _currentTool.UpdateWeldEffects(power);
     }
 
     public void StopEffects()
     {
-        if (_effectsPlaying && _currentElectrode != null)
+        if (_effectsPlaying && _currentTool != null)
         {
-            _currentElectrode.StopWeldEffects();
+            _currentTool.StopWeldEffects();
             _effectsPlaying = false;
-            _currentElectrode = null;
+            _currentTool = null;
         }
     }
 }

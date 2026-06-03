@@ -20,4 +20,8 @@ public interface IWeldingTool
     // Расходуемый ли инструмент?
     public bool IsConsumable { get; }
     public void Consume(float amount);      // если да — израсходовать
+
+    public void StartWeldEffects(float power, float optimal);
+    public void StopWeldEffects();
+    public void UpdateWeldEffects(float power);
 }

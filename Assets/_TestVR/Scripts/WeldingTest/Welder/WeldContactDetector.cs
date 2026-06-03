@@ -1,28 +1,30 @@
 using UnityEngine;
 
-public class WeldContactDetector : MonoBehaviour
+public class WeldContactDetector : MonoBehaviour, IWeldContactDetector
 {
     [SerializeField] private bool _debugMode = true;
 
     [Header("BoxCast Settings")]
     [SerializeField] private Vector3 _boxHalfExtents = new Vector3(0.002f, 0.002f, 0.01f); // тонкая пластина вдоль оси электрода
+    [Header("Search")]
+    [SerializeField] private float _searchRadius = 0.03f;
 
     public Weldable TargetA { get; private set; }
     public Weldable TargetB { get; private set; }
     public WeldProcessModel ProcessModel => TargetA?.ProcessModel;
 
     // Пытается обнаружить свариваемую пару. Возвращает true, если контакт возможен.
-    public bool Evaluate(Electrode electrode, out RaycastHit hit)
+    public bool Evaluate(IWeldingTool tool, out RaycastHit hit)
     {
         hit = default;
-        if (electrode == null) return false;
+        if (tool == null) return false;
 
-        Vector3 origin = electrode.Tip.position;
-        Vector3 direction = electrode.Tip.forward;
-        float distance = electrode.WeldDistance; // или _maxDistance, если хотите независимо
+        Vector3 origin = tool.TipPosition;
+        Vector3 direction = tool.TipForward;
+        float distance = tool.WeldDistance;
 
-        // BoxCast: ориентируем бокс вдоль направления (мировые полуразмеры, поворот — Quaternion.LookRotation)
-        if (!Physics.BoxCast(origin, _boxHalfExtents, direction, out hit, Quaternion.LookRotation(direction), distance))
+        if (!Physics.BoxCast(origin, _boxHalfExtents, direction, out hit,
+            Quaternion.LookRotation(direction), distance))
             return false;
 
         Weldable a = hit.collider.GetComponent<Weldable>();
@@ -31,7 +33,7 @@ public class WeldContactDetector : MonoBehaviour
         if (TargetA != a)
         {
             TargetA = a;
-            TargetB = FindNearbyWeldable(hit.point, a, electrode.SearchRadius);
+            TargetB = FindNearbyWeldable(hit.point, a, _searchRadius);
             if (_debugMode)
                 Debug.Log($"[WeldContact] Новая цель: A={TargetA?.name}, B={TargetB?.name}");
         }

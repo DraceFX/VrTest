@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeldQualityAssessor : MonoBehaviour
+public class WeldQualityAssessor : MonoBehaviour, IWeldQualityAssessor
 {
     [Header("Веса метрик (сумма = 1)")]
     [SerializeField] private float _weightTrajectory = 0.25f;
@@ -11,7 +11,9 @@ public class WeldQualityAssessor : MonoBehaviour
     [SerializeField] private float _weightWidthUniformity = 0.15f;
     [SerializeField] private float _weightDefects = 0.20f;
 
-    [SerializeField] private WeldTrajectoryEvaluator _trajectoryEvaluator;
+    [SerializeField] private MonoBehaviour _trajectoryEvaluatorComponent;
+
+    private IWeldTrajectoryEvaluator _trajectoryEvaluator;
 
     // Накопленные данные
     private List<float> _widthSamples = new List<float>();
@@ -28,6 +30,11 @@ public class WeldQualityAssessor : MonoBehaviour
     public float ArcStabilityScore { get; private set; }
     public float WidthUniformityScore { get; private set; }
     public float DefectScore { get; private set; }
+
+    private void Awake()
+    {
+        _trajectoryEvaluator = _trajectoryEvaluatorComponent as IWeldTrajectoryEvaluator;
+    }
 
     public void StartAssessment()
     {
@@ -57,6 +64,9 @@ public class WeldQualityAssessor : MonoBehaviour
         if (!_isWelding) return;
         _elapsedTime += Time.deltaTime;
 
+        if (!_isWelding) return;
+        _elapsedTime += Time.deltaTime;
+
         // 1. Траектория – берём готовую из TrajectoryEvaluator
         if (_trajectoryEvaluator != null)
             TrajectoryScore = _trajectoryEvaluator.TrajectoryQuality;
@@ -75,10 +85,9 @@ public class WeldQualityAssessor : MonoBehaviour
         if (currentWidth > 0)
             _widthSamples.Add(currentWidth);
 
-        // 5. Дефекты – Welder будет вызывать специальный метод при появлении дефекта
     }
 
-    // Из Welder вызывать при добавлении поры, брызга, прожога
+    // Вызывать при добавлении поры, брызга, прожога
     public void RegisterDefect()
     {
         _defectCount++;
@@ -88,16 +97,12 @@ public class WeldQualityAssessor : MonoBehaviour
     {
         if (_elapsedTime <= 0f) _elapsedTime = 0.001f;
 
-        // Траектория уже готова (средняя за время)
-        // Тепловложение: средняя ошибка -> переводим в балл
         float avgHeatError = _totalHeatInputError / _elapsedTime;
-        HeatInputScore = Mathf.Clamp01(1f - avgHeatError * 2f); // пример: ошибка 50% -> 0 баллов
+        HeatInputScore = Mathf.Clamp01(1f - avgHeatError * 2f);
 
-        // Дуга: аналогично
         float avgArcError = _totalArcInstability / _elapsedTime;
         ArcStabilityScore = Mathf.Clamp01(1f - avgArcError * 5f);
 
-        // Равномерность ширины: коэффициент вариации
         if (_widthSamples.Count > 1)
         {
             float mean = 0, variance = 0;
@@ -105,12 +110,13 @@ public class WeldQualityAssessor : MonoBehaviour
             mean /= _widthSamples.Count;
             foreach (float w in _widthSamples) variance += (w - mean) * (w - mean);
             variance /= _widthSamples.Count;
-            float cv = Mathf.Sqrt(variance) / mean; // коэффициент вариации
+            float cv = Mathf.Sqrt(variance) / mean;
             WidthUniformityScore = Mathf.Clamp01(1f - cv * 3f);
         }
         else WidthUniformityScore = 1f;
 
-        // Итоговая средневзвешенная
+        DefectScore = Mathf.Clamp01(1f - _defectCount * 0.1f);
+
         OverallQuality = TrajectoryScore * _weightTrajectory
                        + HeatInputScore * _weightHeatInput
                        + ArcStabilityScore * _weightArcStability

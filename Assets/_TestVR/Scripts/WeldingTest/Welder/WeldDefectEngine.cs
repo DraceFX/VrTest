@@ -1,11 +1,17 @@
 using UnityEngine;
 
-public class WeldDefectEngine : MonoBehaviour
+public class WeldDefectEngine : MonoBehaviour, IWeldDefectEngine
 {
-    [SerializeField] private WeldQualityAssessor _qualityAssessor;
+    [SerializeField] private MonoBehaviour _qualityAssessorComponent;
+    private IWeldQualityAssessor _qualityAssessor;
+
+    private void Awake()
+    {
+        _qualityAssessor = _qualityAssessorComponent as IWeldQualityAssessor;
+    }
 
     // Обрабатывает дефекты для текущего кадра сварки.
-    public void ProcessDefects(WeldMeshBuilder builder, WeldProcessModel model, float power, float finalQuality, Vector3 point, Vector3 normal, Electrode electrode, RaycastHit hit)
+    public void ProcessDefects(WeldMeshBuilder builder, WeldProcessModel model, float power, float finalQuality, Vector3 point, Vector3 normal, IWeldingTool tool, RaycastHit hit)
     {
         float defectChance = 1f - finalQuality;
 
@@ -52,8 +58,8 @@ public class WeldDefectEngine : MonoBehaviour
         }
 
         // Нестабильная дуга
-        float arcDistance = Vector3.Distance(electrode.Tip.position, hit.point);
-        bool unstableArc = arcDistance > electrode.WeldDistance * 0.8f;
+        float arcDistance = Vector3.Distance(tool.TipPosition, hit.point);
+        bool unstableArc = arcDistance > tool.WeldDistance * 0.8f;
         if (unstableArc)
         {
             int extraSpatter = Random.Range(2, 6);

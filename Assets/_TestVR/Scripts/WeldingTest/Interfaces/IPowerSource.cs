@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public interface IPowerSource
 {
     public float Current { get; }

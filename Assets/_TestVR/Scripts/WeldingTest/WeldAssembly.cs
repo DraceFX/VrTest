@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class WeldAssembly : MonoBehaviour
 {
     [Header("Настройки прочности шва")]
     [SerializeField] private float _fullQualityBreakForce = 10000f;   // при 100% качестве
     [SerializeField] private float _fullQualityBreakTorque = 10000f; // при 100% качестве
-
 
     private FixedJoint _joint;
     private Rigidbody _connectedBody; // для отслеживания
