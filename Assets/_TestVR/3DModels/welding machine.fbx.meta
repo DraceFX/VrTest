@@ -3,7 +3,77 @@ guid: 8c5b27a8136bfb54fbbb0f0f73d48873
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Carved wood
+    second: {fileID: 2100000, guid: b4a11ecf76c111949a28d4a6ca5f15d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark iron
+    second: {fileID: 2100000, guid: 61b0a0782dd85324d8f3e2025c1d34d2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark iron.001
+    second: {fileID: 2100000, guid: e17e5afb1bd1f9d498f02e8b1f46955e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Glass Red
+    second: {fileID: 2100000, guid: 9a9f71513487e0e4bb5ec07fd21ba13b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Bronze Dixon
+    second: {fileID: 2100000, guid: 4d854a349c715c54990436839e779c51, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Hrom
+    second: {fileID: 2100000, guid: ea4a40807c5d58444854828cd24619bd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Orange
+    second: {fileID: 2100000, guid: 156dbf437b1a93348a3326aa6e3a0c6a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Orange.001
+    second: {fileID: 2100000, guid: a87aba7dd06deae46a769f8a59225637, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Red
+    second: {fileID: 2100000, guid: 4ee422113823a3e4c8df3148057d4eef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal silver Mat
+    second: {fileID: 2100000, guid: aa3f60164c7eeb24386380e515340011, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plastic Blue Old
+    second: {fileID: 2100000, guid: e5abd264d35461344bae2ce4c872ea13, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plastic Grey
+    second: {fileID: 2100000, guid: 880092715f3a6424392cc8953b4a2bce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plastic White
+    second: {fileID: 2100000, guid: eaad674c5558706428ae55959031f8c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rezina
+    second: {fileID: 2100000, guid: 4ba643484632a074088a6d9e2abb24be, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
