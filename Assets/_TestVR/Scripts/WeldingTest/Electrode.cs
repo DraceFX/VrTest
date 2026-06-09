@@ -13,7 +13,6 @@ public class Electrode : MonoBehaviour, IWeldingTool
     [Header("Welding Settings")]
     public Transform Tip;
     [field: SerializeField] public float WeldDistance { get; set; } = 0.03f;
-    public float SearchRadius = 0.03f;
 
     [Header("Geometry")]
     [SerializeField] private float _length = 1f;
@@ -32,6 +31,7 @@ public class Electrode : MonoBehaviour, IWeldingTool
     public float StrikeMinGap => _strikeMinGap;
     public float StrikeMaxGap => _strikeMaxGap;
     public float StickTime => _stickTime;
+    public bool IsArcStruck { get; set; } = false;
 
     // ===== Реализация IWeldingTool =====
     private XRGrabInteractable _grabInteractable;
@@ -177,12 +177,6 @@ public class Electrode : MonoBehaviour, IWeldingTool
 
     private void OnDrawGizmosSelected()
     {
-        if (Tip != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(Tip.position, SearchRadius);
-        }
-
         Vector3 origin = Tip.position;
         Vector3 direction = Tip.forward;
 

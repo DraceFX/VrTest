@@ -24,4 +24,6 @@ public interface IWeldingTool
     public void StartWeldEffects(float power, float optimal);
     public void StopWeldEffects();
     public void UpdateWeldEffects(float power);
+
+    public bool IsArcStruck { get; set; }
 }

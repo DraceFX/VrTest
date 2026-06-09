@@ -37,6 +37,36 @@ public class Welder : MonoBehaviour
     private IWeldTrajectoryEvaluator _trajectoryEvaluator;
     private IWeldQualityAssessor _qualityAssessor;
 
+    private void OnValidate()
+    {
+        if (_socketComponent != null && !(_socketComponent is IToolSocket))
+            _socketComponent = null;
+
+        if (_powerSourceComponent != null && !(_powerSourceComponent is IPowerSource))
+            _powerSourceComponent = null;
+
+        if (_contactDetectorComponent != null && !(_contactDetectorComponent is IWeldContactDetector))
+            _contactDetectorComponent = null;
+
+        if (_sessionManagerComponent != null && !(_sessionManagerComponent is IWeldSessionManager))
+            _sessionManagerComponent = null;
+
+        if (_defectEngineComponent != null && !(_defectEngineComponent is IWeldDefectEngine))
+            _defectEngineComponent = null;
+
+        if (_effectControllerComponent != null && !(_effectControllerComponent is IWeldEffectController))
+            _effectControllerComponent = null;
+
+        if (_consumableConsumerComponent != null && !(_consumableConsumerComponent is IWeldConsumableConsumer))
+            _consumableConsumerComponent = null;
+
+        if (_trajectoryEvaluatorComponent != null && !(_trajectoryEvaluatorComponent is IWeldTrajectoryEvaluator))
+            _trajectoryEvaluatorComponent = null;
+
+        if (_qualityAssessorComponent != null && !(_qualityAssessorComponent is IWeldQualityAssessor))
+            _qualityAssessorComponent = null;
+    }
+
     private void Awake()
     {
         _xrGrab = GetComponent<XRGrabInteractable>();
@@ -88,6 +118,10 @@ public class Welder : MonoBehaviour
         if (tool == null)
         {
             _effectController?.StopEffects();
+            tool?.StopWeldEffects();
+            if (tool != null)
+                tool.IsArcStruck = false;
+
             _arcState = ArcState.Idle;
             _stickTimer = 0f;
             return;
@@ -102,9 +136,10 @@ public class Welder : MonoBehaviour
             _trajectoryEvaluator.UpdateTracking(tool.TipPosition);
 
         // Логика залипания
+        bool inStickZone = hasArcHit && arcDist < tool.StrikeMinGap;
         if (_arcState == ArcState.Striking || _arcState == ArcState.Welding)
         {
-            if (hasArcHit && arcDist < tool.StrikeMinGap)
+            if (inStickZone)
             {
                 _stickTimer += Time.deltaTime;
                 float stickTime = tool is Electrode electrode ? electrode.StickTime : float.PositiveInfinity;
@@ -112,43 +147,57 @@ public class Welder : MonoBehaviour
                 {
                     StickElectrode(arcHit);
                     _arcState = ArcState.Stuck;
+                    tool.IsArcStruck = false;
+                    tool.StopWeldEffects();
                     _effectController?.StopEffects();
                     return;
                 }
             }
             else
             {
-                _stickTimer = 0f;
+                _stickTimer = 0f; // сброс таймера, если расстояние вне опасной зоны
             }
-        }
-        else
-        {
-            _stickTimer = 0f;
         }
 
         // Конечный автомат дуги
         switch (_arcState)
         {
             case ArcState.Idle:
-                if (hasContact)
+                if (hasArcHit && arcDist < tool.StrikeMinGap)
                 {
                     _arcState = ArcState.Striking;
                     _stickTimer = 0f;
+
+                    // Зажигаем дугу
+                    tool.IsArcStruck = true;
+                    WeldProcessModel model = _contactDetector?.ProcessModel;
+                    float optimal = model != null ? model.OptimalPower : power;
+                    tool.StartWeldEffects(power, optimal);
+                    _effectController?.StartEffects(tool, power, optimal);
                 }
                 else
+                {
                     _effectController?.StopEffects();
+                    tool.StopWeldEffects();
+                    tool.IsArcStruck = false;
+                }
                 break;
 
             case ArcState.Striking:
-                if (!hasArcHit || arcDist > tool.ArcMaxDistance)
+                bool lostContact = !hasArcHit || arcDist > tool.ArcMaxDistance;
+                if (lostContact)
                 {
+                    // Потеряли дугу – гасим всё
                     _arcState = ArcState.Idle;
                     _effectController?.StopEffects();
+                    tool.StopWeldEffects();
+                    tool.IsArcStruck = false;
                 }
-                else if (tool.IsInArcGap(arcDist))
+                else if (tool.IsInArcGap(arcDist)) // вошли в [minGap, maxGap]
                 {
                     _arcState = ArcState.Welding;
                     StartWeldSession(arcHit);
+                    // эффекты продолжают работать, можно обновить
                 }
                 break;
 
