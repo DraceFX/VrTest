@@ -16,6 +16,7 @@ public class WeldAssembly : MonoBehaviour
     public bool IsBroken => _joint == null;
     public float CurrentBreakForce => _joint != null ? _joint.breakForce : 0f;
     public float CurrentBreakTorque => _joint != null ? _joint.breakTorque : 0f;
+    public float StrengthPercent => _totalQuality * 100f;
 
     public static WeldAssembly Create(Weldable a, Weldable b, float quality, GameObject weldMeshObject = null)
     {

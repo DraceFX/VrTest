@@ -8,6 +8,7 @@ public class WeldSessionManager : MonoBehaviour, IWeldSessionManager
     [SerializeField] private MonoBehaviour _trajectoryEvaluatorComponent;
     [SerializeField] private MonoBehaviour _qualityAssessorComponent;
     [SerializeField] private WeldProfileVisualizer _profileVisualizer;
+    [SerializeField] private PercentText _percentText;
 
     [SerializeField] private bool _debugMode = true;
 
@@ -83,46 +84,70 @@ public class WeldSessionManager : MonoBehaviour, IWeldSessionManager
     // Завершить текущий шов и сбросить состояние
     public void FinishWeld()
     {
+        // 1. Качество от асессора
         float finalQuality = 0f;
         if (_qualityAssessor != null)
         {
             _qualityAssessor.StopAssessment();
             finalQuality = _qualityAssessor.OverallQuality;
-            Debug.Log($"Шов завершён. Качество: {finalQuality * 100:F1}%");
         }
 
         _trajectoryEvaluator?.Reset();
-
         ActiveBuilder?.CombineAll();
 
+        // 2. Точность траектории — рассчитываем всегда, если есть данные
+        float accuracy = 1f;
+        List<BeadPoint> beadPoints = ActiveBuilder != null ? new List<BeadPoint>(ActiveBuilder.BeadPoints) : null;
+
+        if (beadPoints != null && beadPoints.Count > 1 && _trajectoryEvaluator != null)
+        {
+            List<Vector2> profile = WeldProfileBuilder.BuildProfile(beadPoints);
+            float rms = CalculateRMS(profile, _trajectoryEvaluator);
+            float amplitude = _trajectoryEvaluator.WeaveAmplitude;
+            if (amplitude > 0.001f)
+                accuracy = Mathf.Clamp01(1f - rms / amplitude);
+        }
+
+        // 3. Прочность шва — простое среднее
+        float strength = (finalQuality + accuracy) / 2f;
+
+        // 4. Создаём/обновляем соединение с прочностью
         if (_pendingA != null && _pendingB != null)
         {
-            CurrentAssembly = WeldAssembly.Create(_pendingA, _pendingB, finalQuality, ActiveBuilder?.gameObject);
+            CurrentAssembly = WeldAssembly.Create(_pendingA, _pendingB, strength,
+                                                  ActiveBuilder?.gameObject);
         }
         else
         {
             Debug.LogError("[WeldSession] Односторонний шов завершён без физического соединения.");
         }
 
-        // Дебаг-визуализация профиля (только если визуализатор назначен и есть данные)
-        if (_profileVisualizer != null && ActiveBuilder != null)
+        // 5. Визуализация профиля
+        if (_profileVisualizer != null && ActiveBuilder != null && beadPoints != null && beadPoints.Count > 1 && _trajectoryEvaluator != null)
         {
-            var beadPoints = new List<BeadPoint>(ActiveBuilder.BeadPoints);
-            if (beadPoints.Count > 1 && _trajectoryEvaluator != null)
-            {
-                List<Vector2> profile = WeldProfileBuilder.BuildProfile(beadPoints);
-                WeldPattern pattern = (_trajectoryEvaluator as WeldTrajectoryEvaluator)?.CurrentPattern ?? WeldPattern.Straight;
+            List<Vector2> profile = WeldProfileBuilder.BuildProfile(beadPoints);
+            WeldPattern pattern = (_trajectoryEvaluator as WeldTrajectoryEvaluator)?.CurrentPattern ?? WeldPattern.Straight;
 
-                _profileVisualizer.DrawProfile(profile, ActiveBuilder.ActualLength,
-                                                _trajectoryEvaluator.WeaveAmplitude,
-                                                pattern, _trajectoryEvaluator.WeaveFrequency);
-
-                float rms = CalculateRMS(profile, _trajectoryEvaluator);
-                float accuracy = Mathf.Clamp01(1f - rms / _trajectoryEvaluator.WeaveAmplitude);
-                Debug.Log($"Точность траектории: {accuracy * 100:F1}%");
-            }
+            _profileVisualizer.DrawProfile(profile, ActiveBuilder.ActualLength, _trajectoryEvaluator.WeaveAmplitude, pattern, _trajectoryEvaluator.WeaveFrequency);
         }
 
+        // 6. Вывод результатов
+        string qualityPercent = $"{finalQuality * 100:F1}%";
+        string accuracyPercent = $"{accuracy * 100:F1}%";
+        string strengthPercent = $"{strength * 100:F1}%";
+
+        if (_debugMode)
+        {
+            Debug.Log($"[WeldSession] Качество: {qualityPercent}, " +
+                      $"Точность: {accuracyPercent}, Прочность: {strengthPercent}");
+        }
+
+        // Заполняем UI, если поля назначены
+        _percentText.SetText($"Качество: {qualityPercent}\n" +
+                            $"Точность: {accuracyPercent}\n" +
+                            $"Прочтоность шва: {strengthPercent}");
+
+        // Сброс состояния
         ActiveBuilder = null;
         _pendingA = null;
         _pendingB = null;
