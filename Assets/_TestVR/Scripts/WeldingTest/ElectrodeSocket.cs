@@ -48,7 +48,9 @@ public class ElectrodeSocket : MonoBehaviour, IToolSocket
         AttachedElectrode = null;
         electrode.AttachedSocket = null;
         electrode.transform.SetParent(null);
-        electrode.Rb.isKinematic = false;
+
+        if (electrode.Rb != null)
+            electrode.Rb.isKinematic = false;
 
         ToolDetached?.Invoke();
     }

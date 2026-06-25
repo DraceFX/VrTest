@@ -9789,7 +9789,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -2386210586071607645, guid: 8c5b27a8136bfb54fbbb0f0f73d48873, type: 3}
+  - {fileID: 2100000, guid: e17e5afb1bd1f9d498f02e8b1f46955e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9856,7 +9856,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 2
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.16715202, g: 0.55332184, b: 0.674, a: 1}
   m_Intensity: 0
   m_Range: 0.8
   m_SpotAngle: 30
@@ -10149,7 +10149,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.03
+  m_Radius: 0.015
   m_Height: 0.2
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0.1}
@@ -10330,10 +10330,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78e721c7330a672419957e3be24e47bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Electrode
-  _grabInteractable: {fileID: 3029874223334629821}
-  _rigidbody: {fileID: 0}
   _effect: {fileID: 5985358346155820424}
   Tip: {fileID: 1208280813661744296}
-  WeldDistance: 0.03
-  SearchRadius: 0.05
+  <WeldDistance>k__BackingField: 0.03
   _length: 1
+  _arcMaxDistance: 0.05
+  _strikeMinGap: 0.003
+  _strikeMaxGap: 0.02
+  _arcBoxHalfExtents: {x: 0.002, y: 0.002, z: 0.01}
+  _stickTime: 0.5
+  _stikeMaxGap: 0.003
+  _stikeMinGap: 0

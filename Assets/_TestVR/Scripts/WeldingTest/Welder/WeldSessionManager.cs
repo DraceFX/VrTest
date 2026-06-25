@@ -145,7 +145,7 @@ public class WeldSessionManager : MonoBehaviour, IWeldSessionManager
         // Заполняем UI, если поля назначены
         _percentText.SetText($"Качество: {qualityPercent}\n" +
                             $"Точность: {accuracyPercent}\n" +
-                            $"Прочтоность шва: {strengthPercent}");
+                            $"Прочность шва: {strengthPercent}");
 
         // Сброс состояния
         ActiveBuilder = null;

@@ -18,19 +18,31 @@ public class Electrode : MonoBehaviour, IWeldingTool
     [SerializeField] private float _length = 1f;
 
     [Header("Arc Striking")]
-    [SerializeField] private float _arcMaxDistance = 0.1f;
-    [SerializeField] private float _strikeMinGap = 0.006f;
-    [SerializeField] private float _strikeMaxGap = 0.02f;
-    [SerializeField] private Vector3 _arcBoxHalfExtents = new Vector3(0.002f, 0.002f, 0.01f);
+    [SerializeField] private float _arcMaxDistance = 0.03f;                     // дальность BoxCast
+    [SerializeField] private float _strikeMinGap = 0.002f;                      // начало рабочей дуги
+    [SerializeField] private float _strikeMaxGap = 0.015f;                      // конец рабочей дуги
+    [SerializeField] private Vector3 _arcBoxHalfExtents = new Vector3(0.003f, 0.003f, 0.008f);
 
     [Header("Sticking")]
-    [SerializeField] private float _stickTime = 1f;
+    [SerializeField] private float _stickTime = 0.3f;                           // время до залипания
+    [SerializeField] private float _stickMaxGap = 0.002f;                       // верхняя граница зоны касания (должна совпадать с _strikeMinGap)
+    [SerializeField] private float _stickMinGap = 0f;
 
-    public Rigidbody Rb => _rigidbody;
+    public Rigidbody Rb
+    {
+        get
+        {
+            if (_rigidbody == null)
+                _rigidbody = GetComponent<Rigidbody>();
+            return _rigidbody;
+        }
+    }
     public float ArcMaxDistance => _arcMaxDistance;
     public float StrikeMinGap => _strikeMinGap;
     public float StrikeMaxGap => _strikeMaxGap;
     public float StickTime => _stickTime;
+    public float StickMinGap => _stickMinGap;
+    public float StickMaxGap => _stickMaxGap;
     public bool IsArcStruck { get; set; } = false;
 
     // ===== Реализация IWeldingTool =====
@@ -43,15 +55,16 @@ public class Electrode : MonoBehaviour, IWeldingTool
     private float _currentPower;
     private float _optimalPower;
 
+    // Проверка попадания в зону касания (Stick)
+    public bool IsInStickZone(float distance) => distance >= _stickMinGap && distance <= _stickMaxGap;
+
+    // Проверка попадания в рабочую зону дуги (Strike)
+    public bool IsInArcGap(float distance) => distance >= _strikeMinGap && distance <= _strikeMaxGap;
+    public void Consume(float amount) => Burn(amount);
+
     public bool TryGetArcContact(out RaycastHit hit, out float distance)
     {
-        // Используем существующий метод для совместимости
         return TryGetArcDistance(out hit, out distance);
-    }
-
-    public void Consume(float amount)
-    {
-        Burn(amount);
     }
 
     private void Awake()
@@ -77,14 +90,12 @@ public class Electrode : MonoBehaviour, IWeldingTool
             _grabInteractable.selectExited.RemoveListener(OnSelectExited);
         }
 
-        if (AttachedSocket != null)
-            AttachedSocket.DetachElectrode(this);
+        AttachedSocket?.DetachElectrode(this);
     }
 
     private void OnSelectEntered(SelectEnterEventArgs args)
     {
-        if (AttachedSocket != null)
-            AttachedSocket.DetachElectrode(this);
+        AttachedSocket.DetachElectrode(this);
     }
 
     private void OnSelectExited(SelectExitEventArgs args)
@@ -152,17 +163,10 @@ public class Electrode : MonoBehaviour, IWeldingTool
             distance = hit.distance;
             return true;
         }
-        else
-        {
-            hit = default;
-            distance = float.MaxValue;
-            return false;
-        }
-    }
 
-    public bool IsInArcGap(float distance)
-    {
-        return distance >= _strikeMinGap && distance <= _strikeMaxGap;
+        hit = default;
+        distance = float.MaxValue;
+        return false;
     }
 
     public void StickToSurface(Transform parent)
@@ -177,20 +181,36 @@ public class Electrode : MonoBehaviour, IWeldingTool
 
     private void OnDrawGizmosSelected()
     {
+        if (Tip == null) return;
+
         Vector3 origin = Tip.position;
         Vector3 direction = Tip.forward;
 
+        // Луч максимальной дистанции BoxCast
         Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.7f);
         Gizmos.DrawRay(origin, direction * _arcMaxDistance);
 
+        // Рабочая зона дуги (Strike)
         Vector3 minGapPoint = origin + direction * _strikeMinGap;
         Vector3 maxGapPoint = origin + direction * _strikeMaxGap;
-
         Gizmos.color = Color.green;
         Gizmos.DrawLine(minGapPoint, maxGapPoint);
 
+        // Зона залипания (Stick)
+        Vector3 minStickPoint = origin + direction * _stickMinGap;
+        Vector3 maxStickPoint = origin + direction * _stickMaxGap;
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(minStickPoint, maxStickPoint);
+
+        // Сферы на границах StrikeMin и StrikeMax
         float sphereRadius = 0.0005f;
         Gizmos.DrawWireSphere(minGapPoint, sphereRadius);
         Gizmos.DrawWireSphere(maxGapPoint, sphereRadius);
+
+        // Стартовый объём BoxCast
+        Gizmos.color = Color.yellow;
+        Gizmos.matrix = Matrix4x4.TRS(origin, Tip.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, _arcBoxHalfExtents * 2f);
+        Gizmos.matrix = Matrix4x4.identity;
     }
 }
