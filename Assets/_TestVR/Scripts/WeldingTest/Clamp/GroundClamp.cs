@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-public class GroundClamp : MonoBehaviour
+public class GroundClamp : MonoBehaviour, IStepCompletionProvider
 {
     [Header("Точка контакта")]
     [SerializeField] private Transform _contactPoint;
@@ -26,6 +27,8 @@ public class GroundClamp : MonoBehaviour
     private Quaternion _closedRotation;
     private Quaternion _targetJawRotation;
 
+    public event Action OnCompleted;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
@@ -36,6 +39,7 @@ public class GroundClamp : MonoBehaviour
 
         _xrGrab.activated.AddListener(OnActivated);
         _xrGrab.deactivated.AddListener(OnDeactivated);
+        _xrGrab.selectEntered.AddListener(o => OnCompleted?.Invoke());
 
         if (_jawTransform != null)
         {
@@ -93,6 +97,7 @@ public class GroundClamp : MonoBehaviour
             if (TryFindTarget(out Rigidbody targetRb))
             {
                 AttachTo(targetRb);
+                OnCompleted?.Invoke();
             }
         }
 

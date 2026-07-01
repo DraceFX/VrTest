@@ -149,9 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepManager
   _steps:
-  - {fileID: 11400000, guid: aa6a71b6f59b1d74eb3062aeec360d42, type: 2}
   - {fileID: 11400000, guid: da750da47393f604a91687c6de769480, type: 2}
-  - {fileID: 11400000, guid: 667170381890fb34d95669444f9f6aee, type: 2}
   - {fileID: 11400000, guid: 578fdd988d7e23840bf52112129a6b04, type: 2}
   - {fileID: 11400000, guid: 4a5e88817b578bb4397886061d2d399d, type: 2}
   - {fileID: 11400000, guid: 5ca36ef8f00683c4b904d726275dcfd7, type: 2}
@@ -1230,7 +1228,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8122a4c5a6e7794c8f7d4ae221880d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
-  _targetId: Table (1)
+  _targetId: Table
 --- !u!1 &312207711
 GameObject:
   m_ObjectHideFlags: 0
@@ -8614,7 +8612,6 @@ GameObject:
   - component: {fileID: 732943811}
   - component: {fileID: 732943816}
   - component: {fileID: 732943810}
-  - component: {fileID: 732943819}
   - component: {fileID: 732943818}
   - component: {fileID: 732943817}
   m_Layer: 0
@@ -9016,19 +9013,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8122a4c5a6e7794c8f7d4ae221880d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
-  _targetId: TakeClampSocket
---- !u!114 &732943819
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732943809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99cc36142fb37ad42b53942a75dce673, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrabStepCompletionProvider
+  _targetId: CableGroundedClamp
 --- !u!114 &740970200 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7378529311405566340, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
@@ -15478,142 +15463,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1178515414}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1282601168 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-  m_PrefabInstance: {fileID: 1910701874}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1282601174
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1282601168}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Outline
-  outlineMode: 0
-  outlineColor: {r: 0.1374349, g: 1, b: 0, a: 1}
-  outlineWidth: 2
-  precomputeOutline: 1
-  bakeKeys:
-  - {fileID: -4436552190306440657, guid: 8c5b27a8136bfb54fbbb0f0f73d48873, type: 3}
-  bakeValues:
-  - data:
-    - {x: 0.4472136, y: -0.8944272, z: 0}
-    - {x: 0.5752978, y: 0.5783779, z: 0.5783696}
-    - {x: 0.5752978, y: -0.5783779, z: 0.5783697}
-    - {x: 0.4472136, y: 0.8944272, z: 0.00000000548038}
-    - {x: 0.5793973, y: -0.5763281, z: -0.57631993}
-    - {x: 0.5793973, y: 0.5763281, z: -0.5763199}
-    - {x: 0.5793973, y: 0.5763281, z: -0.5763199}
-    - {x: -0.083046466, y: 0.44895014, z: -0.88968927}
-    - {x: -0.37706745, y: 0.45827448, z: -0.8048631}
-    - {x: 0.4472136, y: 0.8944272, z: 0.00000000548038}
-    - {x: -0.73190534, y: 0.46217355, z: -0.50070965}
-    - {x: -0.88679874, y: 0.45827436, z: -0.059771195}
-    - {x: -0.85931164, y: 0.44895014, z: 0.2450047}
-    - {x: -0.6804001, y: 0.73283476, z: -0.002999126}
-    - {x: -0.6804001, y: 0.73283476, z: -0.002999126}
-    - {x: -0.6804001, y: -0.73283476, z: -0.002999126}
-    - {x: -0.85712653, y: -0.44895136, z: -0.25254074}
-    - {x: -0.8571265, y: 0.44895133, z: -0.25254077}
-    - {x: -0.09254937, y: 0.44895142, z: 0.88875043}
-    - {x: -0.092549354, y: -0.44895136, z: 0.8887504}
-    - {x: 0.5752978, y: -0.5783779, z: 0.5783697}
-    - {x: 0.5752978, y: 0.5783779, z: 0.5783696}
-    - {x: -0.85712653, y: -0.44895136, z: -0.25254074}
-    - {x: -0.6804001, y: -0.73283476, z: -0.002999126}
-    - {x: 0.4472136, y: -0.8944272, z: 0}
-    - {x: 0.5752978, y: -0.5783779, z: 0.5783697}
-    - {x: -0.88730997, y: -0.4582537, z: 0.05181182}
-    - {x: -0.7367693, y: -0.4621165, z: 0.49357793}
-    - {x: -0.38549855, y: -0.45825374, z: 0.80087095}
-    - {x: -0.092549354, y: -0.44895136, z: 0.8887504}
-    - {x: 0.5793973, y: 0.5763281, z: -0.5763199}
-    - {x: 0.5793973, y: -0.5763281, z: -0.57631993}
-    - {x: -0.083046466, y: -0.44895014, z: -0.8896894}
-    - {x: -0.083046466, y: 0.44895014, z: -0.88968927}
-    - {x: -0.37706745, y: -0.45827448, z: -0.8048632}
-    - {x: -0.083046466, y: -0.44895014, z: -0.8896894}
-    - {x: 0.5793973, y: -0.5763281, z: -0.57631993}
-    - {x: 0.4472136, y: -0.8944272, z: 0}
-    - {x: -0.73190534, y: -0.46217355, z: -0.5007097}
-    - {x: -0.88679874, y: -0.45827436, z: -0.05977125}
-    - {x: -0.85931164, y: -0.44895014, z: 0.24500464}
-    - {x: -0.6804001, y: -0.73283476, z: -0.002999126}
-    - {x: 0.5752978, y: 0.5783779, z: 0.5783696}
-    - {x: 0.4472136, y: 0.8944272, z: 0.00000000548038}
-    - {x: -0.6804001, y: 0.73283476, z: -0.002999126}
-    - {x: -0.8571265, y: 0.44895133, z: -0.25254077}
-    - {x: -0.88730997, y: 0.4582537, z: 0.051811766}
-    - {x: -0.73676944, y: 0.46211657, z: 0.49357793}
-    - {x: -0.3854986, y: 0.4582538, z: 0.80087095}
-    - {x: -0.09254937, y: 0.44895142, z: 0.88875043}
-    - {x: -0.083046466, y: -0.44895014, z: -0.8896894}
-    - {x: -0.37706745, y: -0.45827448, z: -0.8048632}
-    - {x: -0.37706745, y: 0.45827448, z: -0.8048631}
-    - {x: -0.083046466, y: 0.44895014, z: -0.88968927}
-    - {x: -0.37706745, y: -0.45827448, z: -0.8048632}
-    - {x: -0.73190534, y: -0.46217355, z: -0.5007097}
-    - {x: -0.73190534, y: 0.46217355, z: -0.50070965}
-    - {x: -0.37706745, y: 0.45827448, z: -0.8048631}
-    - {x: -0.73190534, y: -0.46217355, z: -0.5007097}
-    - {x: -0.88679874, y: -0.45827436, z: -0.05977125}
-    - {x: -0.88679874, y: 0.45827436, z: -0.059771195}
-    - {x: -0.73190534, y: 0.46217355, z: -0.50070965}
-    - {x: -0.88679874, y: -0.45827436, z: -0.05977125}
-    - {x: -0.85931164, y: -0.44895014, z: 0.24500464}
-    - {x: -0.85931164, y: 0.44895014, z: 0.2450047}
-    - {x: -0.88679874, y: 0.45827436, z: -0.059771195}
-    - {x: -0.09254937, y: 0.44895142, z: 0.88875043}
-    - {x: -0.3854986, y: 0.4582538, z: 0.80087095}
-    - {x: -0.38549855, y: -0.45825374, z: 0.80087095}
-    - {x: -0.092549354, y: -0.44895136, z: 0.8887504}
-    - {x: -0.3854986, y: 0.4582538, z: 0.80087095}
-    - {x: -0.73676944, y: 0.46211657, z: 0.49357793}
-    - {x: -0.7367693, y: -0.4621165, z: 0.49357793}
-    - {x: -0.38549855, y: -0.45825374, z: 0.80087095}
-    - {x: -0.73676944, y: 0.46211657, z: 0.49357793}
-    - {x: -0.88730997, y: 0.4582537, z: 0.051811766}
-    - {x: -0.88730997, y: -0.4582537, z: 0.05181182}
-    - {x: -0.7367693, y: -0.4621165, z: 0.49357793}
-    - {x: -0.88730997, y: 0.4582537, z: 0.051811766}
-    - {x: -0.8571265, y: 0.44895133, z: -0.25254077}
-    - {x: -0.85712653, y: -0.44895136, z: -0.25254074}
-    - {x: -0.88730997, y: -0.4582537, z: 0.05181182}
-    - {x: -0.85931164, y: 0.44895014, z: 0.2450047}
-    - {x: -0.85931164, y: -0.44895014, z: 0.24500464}
-    - {x: -0.6804001, y: -0.73283476, z: -0.002999126}
-    - {x: -0.6804001, y: 0.73283476, z: -0.002999126}
---- !u!114 &1282601175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1282601168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8122a4c5a6e7794c8f7d4ae221880d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
-  _targetId: TakeElectrode
---- !u!114 &1282601176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1282601168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99cc36142fb37ad42b53942a75dce673, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrabStepCompletionProvider
 --- !u!1 &1287474878
 GameObject:
   m_ObjectHideFlags: 0
@@ -18048,10 +17897,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1208280813661744296, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.2
-      objectReference: {fileID: 0}
     - target: {fileID: 1635714728096696153, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.6262999
@@ -18092,63 +17937,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6034013540734544110, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: m_Intensity
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
       propertyPath: m_Name
       value: ElectrodPivot (1)
       objectReference: {fileID: 0}
-    - target: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: m_TagString
-      value: Electrode
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _stickTime
-      value: 0.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _stickMaxGap
-      value: 0.002
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _stikeMaxGap
-      value: 0.001
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _stickeMaxGap
-      value: 0.002
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _strikeMaxGap
-      value: 0.015
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _strikeMinGap
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: _arcMaxDistance
-      value: 0.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 8736325362622691221, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      propertyPath: <WeldDistance>k__BackingField
-      value: 0.01
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1282601176}
-    - targetCorrespondingSourceObject: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1282601175}
-    - targetCorrespondingSourceObject: {fileID: 7918885225156303831, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1282601174}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3b6bb8408e38ca64f87989e610b8d292, type: 3}
 --- !u!1 &1977539547 stripped
 GameObject:
@@ -18274,18 +18070,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
   _targetId: ClampToTable
---- !u!114 &1977539554
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1977539547}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 189e2d4df7084574aaeb16f2c13ff608, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ClampStepCompletionProvider
 --- !u!114 &1977539555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18299,18 +18083,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
   _targetId: TakeClamp
---- !u!114 &1977539556
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1977539547}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99cc36142fb37ad42b53942a75dce673, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrabStepCompletionProvider
 --- !u!114 &1990438146 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2940302495247059644, guid: ab07b42eda2956146a069e0642cfb615, type: 3}
@@ -18337,7 +18109,6 @@ GameObject:
   - component: {fileID: 2025772500}
   - component: {fileID: 2025772499}
   - component: {fileID: 2025772498}
-  - component: {fileID: 2025772507}
   - component: {fileID: 2025772506}
   - component: {fileID: 2025772505}
   m_Layer: 0
@@ -18739,19 +18510,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8122a4c5a6e7794c8f7d4ae221880d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepTargetIdentifier
-  _targetId: TakeWelderSocket
---- !u!114 &2025772507
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2025772497}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99cc36142fb37ad42b53942a75dce673, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrabStepCompletionProvider
+  _targetId: CableWelder
 --- !u!1 &2028237849
 GameObject:
   m_ObjectHideFlags: 0
@@ -19337,13 +19096,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3184406974574032130, guid: 053f70be5b9730d42ad3532a08533728, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1977539556}
-    - targetCorrespondingSourceObject: {fileID: 3184406974574032130, guid: 053f70be5b9730d42ad3532a08533728, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1977539555}
-    - targetCorrespondingSourceObject: {fileID: 3184406974574032130, guid: 053f70be5b9730d42ad3532a08533728, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1977539554}
     - targetCorrespondingSourceObject: {fileID: 3184406974574032130, guid: 053f70be5b9730d42ad3532a08533728, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1977539553}

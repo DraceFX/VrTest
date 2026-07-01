@@ -9,25 +9,17 @@ public class StepData : ScriptableObject
     public Sprite instructionImage;        // поясняющее изображение (опционально)
 
     [Tooltip("ID, заданный в компоненте StepTargetIdentifier на целевом объекте")]
-    public string targetId;        // объект, который нужно подсветить и/или с которым взаимодействовать
-    public StepCompletionType completionType; // как завершается шаг
+    public string targetId;
+    [Tooltip("Дополнительные объекты для подсветки (только визуальное выделение, без провайдера)")]
+    public string[] additionalHighlightTargetIds;
 
-    // Если completionType == CustomScript, здесь лежит ссылка на MonoBehaviour с интерфейсом ICustomStepChecker
-    public MonoBehaviour customChecker;    // (приводится к ICustomStepChecker в коде)
+    [Tooltip("Если true, шаг не ждёт автоматического завершения — вызовите StepManager.NextStep() из другого кода")]
+    public bool isManual = false;
 
-    // Дополнительно: действия при старте/завершении шага (звук, анимация)
-    public UnityEvent onStepStart;
-    public UnityEvent onStepCompleted;
-}
+    [Tooltip("ID объекта, на котором висит компонент, реализующий ICustomStepChecker (если нужна проверка каждый кадр)")]
+    public string customCheckerTargetId;    // (приводится к ICustomStepChecker в коде)
 
-public enum StepCompletionType
-{
-    Grab,            // схватить объект
-    Activate,        // активировать (кнопка, рычаг)
-    CollisionEnter,  // войти в зону
-    CustomScript,    // проверка через скрипт (интерфейс)
-    LeverActivate,
-    KnobTurn,
-    Clamp,
-    Manual           // шаг завершается вызовом StepManager.NextStep() из другого кода
+    [Header("События (ScriptableObject)")]
+    public StepEventSO onStepStartEvent;
+    public StepEventSO onStepCompletedEvent;
 }

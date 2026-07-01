@@ -17,11 +17,9 @@ MonoBehaviour:
     \u043A \u0441\u0432\u0430\u0440\u043E\u0447\u043D\u043E\u043C\u0443 \u0430\u043F\u043F\u0430\u0440\u0430\u0442\u0443"
   instructionImage: {fileID: 21300000, guid: d5f9fe51b40903c48b3d91660fefb60d, type: 3}
   targetId: ConnectClampSocket
-  completionType: 2
-  customChecker: {fileID: 0}
-  onStepStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onStepCompleted:
-    m_PersistentCalls:
-      m_Calls: []
+  additionalHighlightTargetIds:
+  - CableGroundedClamp
+  isManual: 0
+  customCheckerTargetId: 
+  onStepStartEvent: {fileID: 0}
+  onStepCompletedEvent: {fileID: 0}

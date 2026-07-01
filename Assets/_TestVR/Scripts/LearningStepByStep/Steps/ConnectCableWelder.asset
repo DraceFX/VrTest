@@ -17,11 +17,9 @@ MonoBehaviour:
     \u0430\u043F\u043F\u0430\u0440\u0430\u0442\u0443"
   instructionImage: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   targetId: ConnectWelderSocket
-  completionType: 2
-  customChecker: {fileID: 0}
-  onStepStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onStepCompleted:
-    m_PersistentCalls:
-      m_Calls: []
+  additionalHighlightTargetIds:
+  - CableWelder
+  isManual: 0
+  customCheckerTargetId: 
+  onStepStartEvent: {fileID: 0}
+  onStepCompletedEvent: {fileID: 0}

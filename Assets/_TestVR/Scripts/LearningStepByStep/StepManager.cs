@@ -20,6 +20,8 @@ public class StepManager : MonoBehaviour
     private IStepCompletionProvider _currentCompletionProvider;
     private ICustomStepChecker _currentCustomChecker;
 
+    private List<GameObject> _currentHighlightTargets = new List<GameObject>();
+
     private void Awake()
     {
         _outline = _outlineService as IOutlineService;
@@ -79,10 +81,25 @@ public class StepManager : MonoBehaviour
             return;
         }
 
+        step.onStepStartEvent?.Raise();
+
         DisplayStepUI(step);
         ActivateOutline(target);
+        foreach (string id in step.additionalHighlightTargetIds)
+        {
+            if (string.IsNullOrEmpty(id)) continue;
+            GameObject extraTarget = TargetRegistry.Instance.GetTarget(id);
+            if (extraTarget != null)
+            {
+                ActivateOutline(extraTarget);
+                _currentHighlightTargets.Add(extraTarget);
+            }
+            else
+            {
+                Debug.LogWarning($"Дополнительный объект с ID '{id}' не найден");
+            }
+        }
         SetupCompletionProvider(step, target);
-        step.onStepStart?.Invoke();
     }
 
     private void DisplayStepUI(StepData step)
@@ -116,42 +133,45 @@ public class StepManager : MonoBehaviour
         }
         _currentCustomChecker = null;
 
-        switch (step.completionType)
+        if (step.isManual)
+            return;
+
+        // 1) Ищем IStepCompletionProvider на целевом объекте
+        var providerComponent = target.GetComponent<IStepCompletionProvider>() as MonoBehaviour;
+        if (providerComponent != null)
         {
-            case StepCompletionType.Grab:
-                _currentCompletionProvider = target.GetComponent<GrabStepCompletionProvider>();
-                break;
-            case StepCompletionType.Activate:
-                _currentCompletionProvider = target.GetComponent<ActivateStepCompletionProvider>();
-                break;
-            case StepCompletionType.CollisionEnter:
-                _currentCompletionProvider = target.GetComponent<TriggerStepCompletionProvider>();
-                break;
-            case StepCompletionType.CustomScript:
-                _currentCustomChecker = step.customChecker as ICustomStepChecker;
-                break;
-            case StepCompletionType.LeverActivate:
-                _currentCompletionProvider = target.GetComponent<LeverStepCompletionProvider>();
-                break;
-            case StepCompletionType.KnobTurn:
-                _currentCompletionProvider = target.GetComponent<KnobStepCompletionProvider>();
-                break;
-            case StepCompletionType.Clamp:
-                _currentCompletionProvider = target.GetComponent<ClampStepCompletionProvider>();
-                break;
-            case StepCompletionType.Manual:
-                // Ничего не делаем – шаг будет завершён вызовом NextStep() извне
-                break;
+            _currentCompletionProvider = (IStepCompletionProvider)providerComponent;
+            _currentCompletionProvider.OnCompleted += OnStepActionCompleted;
+
+            return;   // всё настроено, выходим
         }
 
-        if (_currentCompletionProvider != null)
-            _currentCompletionProvider.OnCompleted += OnStepActionCompleted;
+        // 2) Если провайдера нет — проверяем customCheckerTargetId
+        if (!string.IsNullOrEmpty(step.customCheckerTargetId))
+        {
+            GameObject checkerObj = TargetRegistry.Instance.GetTarget(step.customCheckerTargetId);
+            if (checkerObj != null)
+            {
+                _currentCustomChecker = checkerObj.GetComponent<ICustomStepChecker>();
+                if (_currentCustomChecker == null)
+                    Debug.LogError($"Объект с ID '{step.customCheckerTargetId}' не содержит компонент ICustomStepChecker");
+            }
+            else
+            {
+                Debug.LogError($"Объект с ID '{step.customCheckerTargetId}' не найден в реестре");
+            }
+            return;   // не важно, успешно или нет — мы пытались, больше ничего не делаем
+        }
+
+        // 3) Ничего не найдено — ошибка
+        Debug.LogError($"Шаг {step.name}: на объекте '{target.name}' нет IStepCompletionProvider, " +
+                       "и не задан customCheckerTargetId. Шаг не будет завершён.");
     }
 
     private void OnStepActionCompleted()
     {
         StepData step = _steps[_currentStepIndex];
-        step.onStepCompleted?.Invoke();
+        step.onStepCompletedEvent?.Raise();
         NextStep();
     }
 
@@ -161,7 +181,7 @@ public class StepManager : MonoBehaviour
         {
             _currentCustomChecker = null;
             StepData step = _steps[_currentStepIndex];
-            step.onStepCompleted?.Invoke();
+            step.onStepCompletedEvent?.Raise();
             NextStep();
         }
     }
@@ -174,7 +194,7 @@ public class StepManager : MonoBehaviour
             _currentCompletionProvider = null;
         }
 
-        // Выключаем обводку у объекта текущего шага
+        // Отключаем подсветку основного объекта
         if (_currentStepIndex >= 0 && _currentStepIndex < _steps.Count)
         {
             string currentId = _steps[_currentStepIndex].targetId;
@@ -185,6 +205,14 @@ public class StepManager : MonoBehaviour
                     _outline?.HideOutline(currentTarget);
             }
         }
+        // Отключаем подсветку всех дополнительных объектов
+        foreach (var go in _currentHighlightTargets)
+        {
+            if (go != null)
+                _outline?.HideOutline(go);
+        }
+        _currentHighlightTargets.Clear();
+
         _currentCustomChecker = null;
     }
 
@@ -229,6 +257,6 @@ public class StepManager : MonoBehaviour
     private void CompleteTraining()
     {
         _instructionTextUI.text = "Обучение завершено!";
-        Debug.Log("Обучение завершено!");
+        CleanupCurrentStep();
     }
 }
